@@ -7,7 +7,7 @@ Molecular integrals library for the Gammcor code of Pernal et al.:
 * AO->MO transformation,
 * interfaces for converting AO indices between Gammcor and external programs.
 
-The build script of gammcor-cholesky generates static library `cholesky.a`, which should be linked to tGammcor's main binary file.
+The build script of gammcor-cholesky generates static library `cholesky.a`, which should be linked to Gammcor's main binary file.
 
 ## Installation
 #### 1. Clone the repository
