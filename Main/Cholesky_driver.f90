@@ -451,6 +451,57 @@ contains
             call boys_free()
       end subroutine chol_F
 
+      
+      subroutine chol_H0_mo(H0_mo, C, AOBasis, System, ExternalOrdering)            
+            real(F64), dimension(:, :), intent(out) :: H0_mo
+            real(F64), dimension(:, :), intent(in)  :: C
+            type(TAOBasis), intent(in)              :: AOBasis
+            type(TSystem), intent(in)               :: System
+            integer, intent(in)                     :: ExternalOrdering
+
+            real(F64), dimension(:, :), allocatable :: C_ao
+            real(F64), dimension(:, :), allocatable :: H0_ao
+            real(F64), dimension(:, :), allocatable :: TransfWork
+            integer :: NMO, NAO
+            logical :: FromExternalAO, TwoIndexTransf
+
+            call auto2e_init()
+            call boys_init(4*AUTO2E_MAXL)
+            associate (NAOCart => AOBasis%NAOCart, &
+                  NAOSpher => AOBasis%NAOSpher, &
+                  SpherAO => AOBasis%SpherAO)
+
+                  NMO = size(C, dim=2)
+                  NAO = size(C, dim=1)
+                  if ((SpherAO .and. NAO /= NAOSpher) .or. (.not.SpherAO .and. NAO /= NAOCart)) then
+                        call msg("Invalid dimension of matrix C")
+                        error stop
+                  end if
+                  !
+                  ! Bare nuclei hamiltonian (atomic orbital basis, auto2e ordering)
+                  !
+                  allocate(H0_ao(NAO, NAO))
+                  call chol_H0(H0_ao, AOBasis, System)
+                  !
+                  ! MO coefficients in AO basis (auto2e ordering)
+                  !
+                  allocate(C_ao(NAO, NMO))
+                  FromExternalAO = .true. ! AOs from external program -> AOs in the Auto2e format
+                  TwoIndexTransf = .false. ! Transform only the index p of C(p,k)
+                  call auto2e_interface_AngFuncTransf(C_ao, C, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
+                  if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
+                        call auto2e_interface_ApplyOrcaPhases_Matrix(C_ao, AOBasis, TwoIndexTransf)
+                  end if
+                  !
+                  ! Bare nuclei hamiltonian (MO basis)
+                  !
+                  allocate(TransfWork(NAO, NMO))
+                  call linalg_ab(TransfWork, H0_ao, C_ao)
+                  call linalg_aTb(H0_mo, C_ao, TransfWork)
+            end associate
+            call boys_free()
+      end subroutine chol_H0_mo
+      
 
       subroutine chol_H0(H0_ao, AOBasis, System)
             real(F64), dimension(:, :), intent(out) :: H0_ao
