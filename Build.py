@@ -454,14 +454,14 @@ for batch in BatchList:
 # ############################################################################
 #                                   Linker
 # ############################################################################
-# LinkerName, LinkerOptions = LinkerCmd.split(maxsplit=1)
-# Command = LinkerName + " " + " ".join(ObjList) + " " + LinkerOptions + " " + ExeFile
-# Display = LinkerName + " " + "[object files in {}]".format(ObjDir) + " " + LinkerOptions + " " + ExeFile
-# print(Display)
-# p = Popen(Command, shell=True)
-# error_code = p.wait()
-# if error_code != 0:
-#     sys.exit(error_code)
+LinkerName, LinkerOptions = LinkerCmd.split(maxsplit=1)
+Command = LinkerName + " " + " ".join(ObjList) + " " + LinkerOptions + " " + ExeFile
+Display = LinkerName + " " + "[object files in {}]".format(ObjDir) + " " + LinkerOptions + " " + ExeFile
+print(Display)
+p = Popen(Command, shell=True)
+error_code = p.wait()
+if error_code != 0:
+    sys.exit(error_code)
 
 # ############################################################################
 #                               Static library

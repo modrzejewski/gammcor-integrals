@@ -39,7 +39,7 @@ contains
             case (CHOL_ACCURACY_DEBUG)
                   call msg("Using debug accuracy, can be numerically unstable")
                   TargetTraceError = 1.0E-10_F64
-                  TargetTraceErrorPrescreen = 1.0E-14_F64
+                  TargetTraceErrorPrescreen = 1.0E-18_F64
                   TargetMaxError = 1.0E-11_F64
                   MaxNAOMult = 20
             end select

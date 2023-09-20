@@ -25,27 +25,35 @@ program test
       integer :: Units
       logical :: SortAngularMomenta
 
-      Example = "H2_min_sym"      
-      RawIntegralsPath = "./examples/" // Example // "/AOTWOINT.mol"
+      Example = "Dalton/water-cc-pVQZ"
+      RawIntegralsPath = "./examples/" // Example // "/results/AOTWOINT"
       BasisSetPath = "./examples/" // Example // "/basis.txt"
       XYZPath = "./examples/" // Example // "/molecule.xyz"
       SBinaryFilePath = "./examples/" // Example // "/S.bin"
-      NaturalOrbitalsPath = "./examples/" // Example // "/CAONO.mol"
-      HFOrbitalsPath = "./examples/" // Example // "/CAOMO.mol"
-      AOSource = 2 ! Molpro binary file
+      NaturalOrbitalsPath = "./examples/" // Example // "/results/CAONO.mol"
+      HFOrbitalsPath = "./examples/" // Example // "/results/CAOMO.bin"
+      ! AOSource = 2 ! Molpro binary file
+      AOSource = 1 ! Dalton binary file
       SpherAO = .true.
-      Accuracy = CHOL_ACCURACY_LUDICROUS
-      ExternalOrdering = ORBITAL_ORDERING_ORCA
+      Accuracy = CHOL_ACCURACY_DEBUG
+      ExternalOrdering = ORBITAL_ORDERING_DALTON
       Units = SYS_UNITS_BOHR
       if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
             SortAngularMomenta = .false.
       else if (ExternalOrdering == ORBITAL_ORDERING_MOLPRO) then
             SortAngularMomenta = .true.
+      else if (ExternalOrdering == ORBITAL_ORDERING_DALTON) then
+            SortAngularMomenta = .false.
       else
             call msg("Check angular momenta ordering")
       end if
+
+      call test_Dalton(XYZPath, Units, BasisSetPath)
+      call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, HFOrbitalsPath, &
+            AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
       
-      call test_Fock_Molpro(BasisSetPath, XYZPath, HFOrbitalsPath, SpherAO, Accuracy)
+      
+  !    call test_Fock_Molpro(BasisSetPath, XYZPath, HFOrbitalsPath, SpherAO, Accuracy)
 
   !    if (ExternalOrdering == ORBITAL_ORDERING_MOLPRO) then
   !          call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, NaturalOrbitalsPath, &
@@ -91,12 +99,15 @@ contains
             NAOSpher = AOBasis%NAOSpher
             NAOCart = AOBasis%NAOCart
             NAO = NAOSpher
+            
             allocate(S_cao(NAOCart, NAOCart))
             allocate(S_sao(NAO, NAO))
             allocate(S_extao(NAO, NAO))
             allocate(S_extao_2(NAO, NAO))
-            call ints1e_OverlapMatrix(S_cao, AOBasis)
+
+            call ints1e_OverlapMatrix(S_cao, AOBasis)            
             call linalg_smfill(S_cao)
+
             allocate(TransfWork(NAOSpher*NAOCart))
             call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
                   AOBasis%LmaxGTO, &
@@ -112,7 +123,6 @@ contains
 
             call auto2e_interface_ApplyOrcaPhases_Matrix(S_sao, AOBasis, .true.)
             call auto2e_interface_AngFuncTransf(S_extao_2, S_sao, .false., .true., AOBasis, ORBITAL_ORDERING_ORCA)
-
             call orca_read_symmetric_matrix(S_extao, SBinaryFilePath)
 
             call msg("--- Auto2e overlap matrix (Auto2e-Orca) ---")
@@ -158,7 +168,7 @@ contains
       
 
       subroutine test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, NaturalOrbitalsPath, &
-            AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta)
+            AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
             
             character(*), intent(in) :: RawIntegralsPath
             character(*), intent(in) :: BasisSetPath
@@ -169,6 +179,7 @@ contains
             integer, intent(in)      :: Accuracy
             integer, intent(in)      :: ExternalOrdering
             logical, intent(in)      :: SortAngularMomenta
+            integer, intent(in)      :: Units
 
             integer :: NAO, Na, Nb, a0, a1, b0, b1
             real(F64), dimension(:, :), allocatable :: CA, CB
@@ -184,7 +195,6 @@ contains
             ! read(iunit) nbas(1:nrep)
             ! close(iunit)
             ! NAO = sum(nbas(1:nrep))
-
 
             open(newunit=iunit,file=NaturalOrbitalsPath,form='UNFORMATTED')
             read(iunit) NAO
@@ -204,12 +214,12 @@ contains
             OnTheFly = .true.
             call chol_MOVecs_v2(RkabOTF, CAONO, a0, a1, CAONO, b0, b1, MaxBufferDimMB, OnTheFly, &
                   RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
-                  SortAngularMomenta)
+                  SortAngularMomenta, Units)
 
             OnTheFly = .false.
-            call chol_MOVecs_v2(Rkab, CSAONO, a0, a1, CSAONO, b0, b1, MaxBufferDimMB, OnTheFly, &
+            call chol_MOVecs_v2(Rkab, CAONO, a0, a1, CAONO, b0, b1, MaxBufferDimMB, OnTheFly, &
                   RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
-                  SortAngularMomenta)
+                  SortAngularMomenta, Units)
 
             call test_CheckRkab(Rkab, RkabOTF, NA, NB, size(Rkab,dim=1), size(RkabOTF,dim=1))
       end subroutine test_Transform_OTF
@@ -326,4 +336,109 @@ contains
             print *, "------------------------- H0_MO ---------------------------"
             call geprn(H0_mo)                       
       end subroutine test_Fock_Molpro
+
+      
+      subroutine test_Dalton(XYZPath, Units, BasisSetPath)
+            character(*), intent(in) :: XYZPath
+            integer, intent(in)      :: Units
+            character(*), intent(in) :: BasisSetPath
+
+            type(TSystem) :: System
+            type(TAOBasis) :: AOBasis
+            real(F64), dimension(:, :), allocatable :: S_cao, S_sao, S_extao, T_cao, T_sao, T_extao, V_cao, V_sao, V_extao
+            real(F64), dimension(:), allocatable :: TransfWork
+            integer :: NAOSpher
+            integer :: NAOCart
+            integer :: NAO
+            logical, parameter :: SpherAO = .true.
+            logical, parameter :: SortAngularMomenta = .false.
+            
+            
+            call auto2e_init()
+            !
+            ! Initialize the Boys function interpolation table
+            ! (used for Coulomb integrals evaluation).
+            !
+            call boys_init(4 * AUTO2E_MAXL)
+            call sys_Read_XYZ(System, XYZPath, Units)
+            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            NAOSpher = AOBasis%NAOSpher
+            NAOCart = AOBasis%NAOCart
+            NAO = NAOSpher
+            allocate(S_cao(NAOCart, NAOCart))
+            allocate(S_sao(NAO, NAO))
+            allocate(S_extao(NAO, NAO))
+
+            allocate(T_cao(NAOCart, NAOCart))
+            allocate(T_sao(NAO, NAO))
+            allocate(T_extao(NAO, NAO))
+
+            allocate(V_cao(NAOCart, NAOCart))
+            allocate(V_sao(NAO, NAO))
+            allocate(V_extao(NAO, NAO))
+
+            call ints1e_OverlapMatrix(S_cao, AOBasis)
+            call ints1e_Coulomb(V_cao, AOBasis, System)
+            call ints1e_Kinetic(T_cao, AOBasis)
+            
+            call linalg_smfill(S_cao)
+            call linalg_smfill(T_cao)
+            call linalg_smfill(V_cao)
+            
+            allocate(TransfWork(NAOSpher*NAOCart))
+            call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
+                  AOBasis%LmaxGTO, &
+                  AOBasis%NormFactorsSpher, &
+                  AOBasis%NormFactorsCart, &
+                  AOBasis%ShellLocSpher, &
+                  AOBasis%ShellLocCart, &
+                  AOBasis%ShellMomentum, &
+                  AOBasis%ShellParamsIdx, &
+                  AOBasis%NAOSpher, &
+                  AOBasis%NAOCart, &
+                  AOBasis%NShells, TransfWork)
+            call SpherGTO_TransformMatrix_U(T_sao, T_cao, &
+                  AOBasis%LmaxGTO, &
+                  AOBasis%NormFactorsSpher, &
+                  AOBasis%NormFactorsCart, &
+                  AOBasis%ShellLocSpher, &
+                  AOBasis%ShellLocCart, &
+                  AOBasis%ShellMomentum, &
+                  AOBasis%ShellParamsIdx, &
+                  AOBasis%NAOSpher, &
+                  AOBasis%NAOCart, &
+                  AOBasis%NShells, TransfWork)
+            call SpherGTO_TransformMatrix_U(V_sao, V_cao, &
+                  AOBasis%LmaxGTO, &
+                  AOBasis%NormFactorsSpher, &
+                  AOBasis%NormFactorsCart, &
+                  AOBasis%ShellLocSpher, &
+                  AOBasis%ShellLocCart, &
+                  AOBasis%ShellMomentum, &
+                  AOBasis%ShellParamsIdx, &
+                  AOBasis%NAOSpher, &
+                  AOBasis%NAOCart, &
+                  AOBasis%NShells, TransfWork)
+
+            
+            call auto2e_interface_AngFuncTransf(S_extao, S_sao, .false., .true., AOBasis, ORBITAL_ORDERING_DALTON)
+            call auto2e_interface_AngFuncTransf(T_extao, T_sao, .false., .true., AOBasis, ORBITAL_ORDERING_DALTON)
+            call auto2e_interface_AngFuncTransf(V_extao, V_sao, .false., .true., AOBasis, ORBITAL_ORDERING_DALTON)
+
+            call msg("--- Auto2e overlap matrix (Auto2e->Dalton) ---")
+            call geprn(S_extao)
+            call msg("--- end of Auto2e overlap matrix ---")
+            
+            call msg("--- Auto2e Vne matrix (Auto2e->Dalton) ---")
+            call geprn(V_extao)
+            call msg("--- end of Auto2e Vne matrix ---")
+
+
+            call msg("--- Auto2e T matrix (Auto2e->Dalton) ---")
+            call geprn(T_extao)
+            call msg("--- end of Auto2e T matrix ---")
+
+            call boys_free()
+      end subroutine test_Dalton
 end program test

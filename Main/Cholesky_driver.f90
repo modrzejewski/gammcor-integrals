@@ -16,135 +16,135 @@ module Cholesky_driver
 
 contains
 
-      subroutine chol_MOVecs(Rkab, CA, a0, a1, CB, b0, b1, MaxBufferDimMB, OnTheFly, &
-            RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
-            SortAngularMomenta)
+      ! subroutine chol_MOVecs(Rkab, CA, a0, a1, CB, b0, b1, MaxBufferDimMB, OnTheFly, &
+      !       RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
+      !       SortAngularMomenta)
 
-            real(F64), dimension(:, :), allocatable, intent(out) :: Rkab
-            real(F64), dimension(:, :), intent(in)               :: CA
-            integer, intent(in)                                  :: a0, a1
-            real(F64), dimension(:, :), intent(in)               :: CB
-            integer, intent(in)                                  :: b0, b1
-            integer, intent(in)                                  :: MaxBufferDimMB
-            logical, intent(in)                                  :: OnTheFly
-            character(*), intent(in)                             :: RawIntegralsPath
-            integer, intent(in)                                  :: AOSource
-            character(*), intent(in)                             :: BasisSetPath
-            character(*), intent(in)                             :: XYZPath
-            integer, intent(in)                                  :: Accuracy
-            logical, intent(in)                                  :: SpherAO
-            integer, intent(in)                                  :: ExternalOrdering
-            logical, intent(in)                                  :: SortAngularMomenta
+      !       real(F64), dimension(:, :), allocatable, intent(out) :: Rkab
+      !       real(F64), dimension(:, :), intent(in)               :: CA
+      !       integer, intent(in)                                  :: a0, a1
+      !       real(F64), dimension(:, :), intent(in)               :: CB
+      !       integer, intent(in)                                  :: b0, b1
+      !       integer, intent(in)                                  :: MaxBufferDimMB
+      !       logical, intent(in)                                  :: OnTheFly
+      !       character(*), intent(in)                             :: RawIntegralsPath
+      !       integer, intent(in)                                  :: AOSource
+      !       character(*), intent(in)                             :: BasisSetPath
+      !       character(*), intent(in)                             :: XYZPath
+      !       integer, intent(in)                                  :: Accuracy
+      !       logical, intent(in)                                  :: SpherAO
+      !       integer, intent(in)                                  :: ExternalOrdering
+      !       logical, intent(in)                                  :: SortAngularMomenta
 
-            type(TCholeskyVecs) :: CholeskyVecs
-            type(TCholeskyVecsOTF) :: CholeskyVecsOTF
-            type(TAOBasis) :: AOBasis
-            type(TSystem) :: System
-            integer :: NCholesky, NA, NB
-            real(F64), dimension(:, :), allocatable :: CA_ao, CB_ao
-            logical :: TwoIndexTransf, FromExternalAO
+      !       type(TCholeskyVecs) :: CholeskyVecs
+      !       type(TCholeskyVecsOTF) :: CholeskyVecsOTF
+      !       type(TAOBasis) :: AOBasis
+      !       type(TSystem) :: System
+      !       integer :: NCholesky, NA, NB
+      !       real(F64), dimension(:, :), allocatable :: CA_ao, CB_ao
+      !       logical :: TwoIndexTransf, FromExternalAO
 
-            NA = a1 - a0 + 1
-            NB = b1 - b0 + 1
-            if (OnTheFly) then
-                  ! ----------------------------------------------------------------
-                  ! Cholesky with on the fly integrals calculation
-                  ! Compatible with MO coeffs from the external programs defined
-                  ! in the Auto2eInterface module.
-                  ! ----------------------------------------------------------------
-                  !
-                  ! Initialize the molecular integrals library.
-                  ! The init subroutine binds subroutines to subroutine pointers.
-                  !
-                  call auto2e_init()
-                  !
-                  ! Initialize the Boys function interpolation table
-                  ! (used for Coulomb integrals evaluation).
-                  !
-                  call boys_init(4 * AUTO2E_MAXL)
-                  !
-                  ! Read the XYZ coordinates and atom types
-                  !
-                  call sys_Read_XYZ(System, XYZPath)
-                  !
-                  ! Read the basis set parameters from an EMSL text file
-                  ! (GAMESS-US format, no need for any edits, just download it straight from the website)
-                  !
-                  call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
-                  if (AOBasis%LmaxGTO > AUTO2E_MAXL) then
-                        call msg("Basis set includes angular momenta unsupported by the Auto2e subroutine")
-                        error stop
-                  end if
-                  if (SpherAO) then
-                        if (size(CA, dim=1) /= AOBasis%NAOSpher .or. size(CB, dim=1) /= AOBasis%NAOSpher) then
-                              call msg("Invalid number of atomic orbitals in CA/CB")
-                              error stop
-                        end if
-                  else
-                        if (size(CA, dim=1) /= AOBasis%NAOCart .or. size(CB, dim=1) /= AOBasis%NAOCart) then
-                              call msg("Invalid number of atomic orbitals in CA/CB")
-                              error stop
-                        end if
-                  end if
-                  !
-                  ! Change the ordering of angular functions from the external program
-                  ! to the internal ordering of the Auto2e module.
-                  ! The ordering of whole shells is assumed to be already the same
-                  ! as in the external program.
-                  !
-                  allocate(CA_ao, mold=CA)
-                  allocate(CB_ao, mold=CB)
-                  FromExternalAO = .true. ! AOs in external format, e.g., Molpro, Orca -> AOs in the format of Auto2e
-                  TwoIndexTransf = .false. ! Transform only the index p of C(p,k)
-                  call auto2e_interface_AngFuncTransf(CA_ao, CA, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
-                  call auto2e_interface_AngFuncTransf(CB_ao, CB, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
-                  if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
-                        call auto2e_interface_ApplyOrcaPhases_Matrix(CA_ao, AOBasis, TwoIndexTransf)
-                        call auto2e_interface_ApplyOrcaPhases_Matrix(CB_ao, AOBasis, TwoIndexTransf)
-                  end if
-                  !
-                  ! Compute the Cholesky vectors is AO basis
-                  !
-                  call chol_CoulombMatrix_OTF(CholeskyVecsOTF, Accuracy, AOBasis)
-                  NCholesky = CholeskyVecsOTF%NVecs
-                  !
-                  ! Transform the Cholesky vectors to the MO basis
-                  !
-                  allocate(Rkab(NCholesky, NA*NB))
-                  call chol_MOTransf_TwoStep_OTF(Rkab, CholeskyVecsOTF, CA_ao, CB_ao, a0, a1, b0, b1, &
-                        MaxBufferDimMB, AOBasis)
-                  !
-                  ! Deallocate the Boys function interpolation tables
-                  ! to avoid allocation of already allocated arrays
-                  ! if this subroutine is called again
-                  !
-                  call boys_free()
-            else
-                  !
-                  ! Cholesky with two-electron integrals read from the disk
-                  !
-                  block
-                        integer :: iunit
-                        integer :: NAO
-                        integer :: nres, nrep, nbas(8)
+      !       NA = a1 - a0 + 1
+      !       NB = b1 - b0 + 1
+      !       if (OnTheFly) then
+      !             ! ----------------------------------------------------------------
+      !             ! Cholesky with on the fly integrals calculation
+      !             ! Compatible with MO coeffs from the external programs defined
+      !             ! in the Auto2eInterface module.
+      !             ! ----------------------------------------------------------------
+      !             !
+      !             ! Initialize the molecular integrals library.
+      !             ! The init subroutine binds subroutines to subroutine pointers.
+      !             !
+      !             call auto2e_init()
+      !             !
+      !             ! Initialize the Boys function interpolation table
+      !             ! (used for Coulomb integrals evaluation).
+      !             !
+      !             call boys_init(4 * AUTO2E_MAXL)
+      !             !
+      !             ! Read the XYZ coordinates and atom types
+      !             !
+      !             call sys_Read_XYZ(System, XYZPath)
+      !             !
+      !             ! Read the basis set parameters from an EMSL text file
+      !             ! (GAMESS-US format, no need for any edits, just download it straight from the website)
+      !             !
+      !             call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+      !             if (AOBasis%LmaxGTO > AUTO2E_MAXL) then
+      !                   call msg("Basis set includes angular momenta unsupported by the Auto2e subroutine")
+      !                   error stop
+      !             end if
+      !             if (SpherAO) then
+      !                   if (size(CA, dim=1) /= AOBasis%NAOSpher .or. size(CB, dim=1) /= AOBasis%NAOSpher) then
+      !                         call msg("Invalid number of atomic orbitals in CA/CB")
+      !                         error stop
+      !                   end if
+      !             else
+      !                   if (size(CA, dim=1) /= AOBasis%NAOCart .or. size(CB, dim=1) /= AOBasis%NAOCart) then
+      !                         call msg("Invalid number of atomic orbitals in CA/CB")
+      !                         error stop
+      !                   end if
+      !             end if
+      !             !
+      !             ! Change the ordering of angular functions from the external program
+      !             ! to the internal ordering of the Auto2e module.
+      !             ! The ordering of whole shells is assumed to be already the same
+      !             ! as in the external program.
+      !             !
+      !             allocate(CA_ao, mold=CA)
+      !             allocate(CB_ao, mold=CB)
+      !             FromExternalAO = .true. ! AOs in external format, e.g., Molpro, Orca -> AOs in the format of Auto2e
+      !             TwoIndexTransf = .false. ! Transform only the index p of C(p,k)
+      !             call auto2e_interface_AngFuncTransf(CA_ao, CA, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
+      !             call auto2e_interface_AngFuncTransf(CB_ao, CB, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
+      !             if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
+      !                   call auto2e_interface_ApplyOrcaPhases_Matrix(CA_ao, AOBasis, TwoIndexTransf)
+      !                   call auto2e_interface_ApplyOrcaPhases_Matrix(CB_ao, AOBasis, TwoIndexTransf)
+      !             end if
+      !             !
+      !             ! Compute the Cholesky vectors is AO basis
+      !             !
+      !             call chol_CoulombMatrix_OTF(CholeskyVecsOTF, Accuracy, AOBasis)
+      !             NCholesky = CholeskyVecsOTF%NVecs
+      !             !
+      !             ! Transform the Cholesky vectors to the MO basis
+      !             !
+      !             allocate(Rkab(NCholesky, NA*NB))
+      !             call chol_MOTransf_TwoStep_OTF(Rkab, CholeskyVecsOTF, CA_ao, CB_ao, a0, a1, b0, b1, &
+      !                   MaxBufferDimMB, AOBasis)
+      !             !
+      !             ! Deallocate the Boys function interpolation tables
+      !             ! to avoid allocation of already allocated arrays
+      !             ! if this subroutine is called again
+      !             !
+      !             call boys_free()
+      !       else
+      !             !
+      !             ! Cholesky with two-electron integrals read from the disk
+      !             !
+      !             block
+      !                   integer :: iunit
+      !                   integer :: NAO
+      !                   integer :: nres, nrep, nbas(8)
                         
-                        open(newunit=iunit,file=RawIntegralsPath,form='unformatted')
-                        read(iunit) nrep
-                        read(iunit) nbas(1:nrep)
-                        close(iunit)
-                        NAO = sum(nbas(1:nrep))
-                        call chol_CoulombMatrix(CholeskyVecs, NAO, RawIntegralsPath, AOSource, Accuracy)
-                        NCholesky = CholeskyVecs%NCholesky
-                        allocate(Rkab(NCholesky, NA*NB))
-                        call chol_MOTransf_TwoStep(Rkab, CholeskyVecs, CA, a0, a1, CB, b0, b1, 10)
-                  end block
-            end if
-      end subroutine chol_MOVecs
+      !                   open(newunit=iunit,file=RawIntegralsPath,form='unformatted')
+      !                   read(iunit) nrep
+      !                   read(iunit) nbas(1:nrep)
+      !                   close(iunit)
+      !                   NAO = sum(nbas(1:nrep))
+      !                   call chol_CoulombMatrix(CholeskyVecs, NAO, RawIntegralsPath, AOSource, Accuracy)
+      !                   NCholesky = CholeskyVecs%NCholesky
+      !                   allocate(Rkab(NCholesky, NA*NB))
+      !                   call chol_MOTransf_TwoStep(Rkab, CholeskyVecs, CA, a0, a1, CB, b0, b1, 10)
+      !             end block
+      !       end if
+      ! end subroutine chol_MOVecs
 
 
       subroutine chol_MOVecs_v2(Rkab, CA, a0, a1, CB, b0, b1, MaxBufferDimMB, OnTheFly, &
             RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
-            SortAngularMomenta)
+            SortAngularMomenta, Units)
 
             real(F64), dimension(:, :), allocatable, intent(out) :: Rkab
             real(F64), dimension(:, :), intent(in)               :: CA
@@ -161,25 +161,31 @@ contains
             logical, intent(in)                                  :: SpherAO
             integer, intent(in)                                  :: ExternalOrdering
             logical, intent(in)                                  :: SortAngularMomenta
+            integer, intent(in)                                  :: Units
 
             type(TCholeskyVecs) :: CholeskyVecs
             type(TCholeskyVecsOTF) :: CholeskyVecsOTF
             type(TAOBasis) :: AOBasis
             type(TSystem) :: System
             integer :: NCholesky, NA, NB
-
+            integer :: NAO
+            !
+            ! Read the XYZ coordinates and atom types
+            !
+            call sys_Read_XYZ(System, XYZPath, Units)
+            !
+            ! Read the basis set parameters from an EMSL text file
+            ! (GAMESS-US format, no need for any edits, just download it straight from the website)
+            !
+            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+            if (AOBasis%SpherAO) then
+                  NAO = AOBasis%NAOSpher
+            else
+                  NAO = AOBasis%NAOCart
+            end if
             NA = a1 - a0 + 1
             NB = b1 - b0 + 1
             if (OnTheFly) then
-                  !
-                  ! Read the XYZ coordinates and atom types
-                  !
-                  call sys_Read_XYZ(System, XYZPath)
-                  !
-                  ! Read the basis set parameters from an EMSL text file
-                  ! (GAMESS-US format, no need for any edits, just download it straight from the website)
-                  !
-                  call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
                   !
                   ! Compute Cholesky vectors in AO basis
                   !
@@ -195,7 +201,8 @@ contains
                   !
                   ! Cholesky with two-electron integrals read from the disk
                   !
-                  call chol_Rkpq_ExternalBinary(CholeskyVecs, RawIntegralsPath, AOSource, Accuracy)
+                  call chol_Rkpq_ExternalBinary(CholeskyVecs, RawIntegralsPath, NAO, &
+                        AOSource, Accuracy)
                   !
                   ! Transform Cholesky vectors to MO basis                  
                   !
@@ -206,24 +213,16 @@ contains
       end subroutine chol_MOVecs_v2
       
 
-      subroutine chol_Rkpq_ExternalBinary(CholeskyVecs, RawIntegralsPath, AOSource, Accuracy)
+      subroutine chol_Rkpq_ExternalBinary(CholeskyVecs, RawIntegralsPath, NAO, AOSource, Accuracy)
             !
             ! Cholesky vectors in AO basis computed with two-electron integrals read from disk.
             !
             type(TCholeskyVecs), intent(out) :: CholeskyVecs
             character(*), intent(in)         :: RawIntegralsPath
+            integer, intent(in)              :: NAO
             integer, intent(in)              :: AOSource
             integer, intent(in)              :: Accuracy
 
-            integer :: iunit
-            integer :: NAO
-            integer :: nrep, nbas(8)
-            
-            open(newunit=iunit,file=RawIntegralsPath,form='unformatted')
-            read(iunit) nrep
-            read(iunit) nbas(1:nrep)
-            close(iunit)
-            NAO = sum(nbas(1:nrep))
             call chol_CoulombMatrix(CholeskyVecs, NAO, RawIntegralsPath, AOSource, Accuracy)
       end subroutine chol_Rkpq_ExternalBinary
 

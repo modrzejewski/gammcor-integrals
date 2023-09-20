@@ -1,0 +1,1 @@
+ifort -O3 -no-prec-div -qopenmp -qmkl -assume byterecl -I{Include} -o

@@ -14,6 +14,7 @@ module Auto2eInterface
       integer, parameter :: ORBITAL_ORDERING_AUTO2E = 0
       integer, parameter :: ORBITAL_ORDERING_MOLPRO = 1
       integer, parameter :: ORBITAL_ORDERING_ORCA = 2
+      integer, parameter :: ORBITAL_ORDERING_DALTON = 3
 
       integer, parameter, private :: Auto2e_MaxAngFuncSpher = 2 * Auto2e_MaxL + 1
       integer, parameter, private :: Auto2e_MaxAngFuncCart = ((Auto2e_MaxL+1)*(Auto2e_MaxL+2))/2
@@ -53,12 +54,33 @@ module Auto2eInterface
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_P = [1, 2, 3, (0,k=1,8)]
       !                                                                    d0  d2- d1+ d2+ d1-
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_D = [0,  -2,  1, 2, -1, (-3,k=1,6)] + 3
-      !                                                             f1+  f1-  f0  f3+  f2-  f3- f2+
+      !                                                                    f1+  f1-  f0  f3+  f2-  f3- f2+
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_F = [1,   -1,   0,  3,  -2,  -3,  2, (-4,k=1,4)] + 4
       !                                                                    g0  g2-  g1+  g4+  g1-  g2+  g4-  g3+  g3-
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_G = [0,  -2,  1,   4,   -1,  2,   -4,  3,   -3, (-5,k=1,2)] + 5
       !                                                                    h1+  h1-  h2+  h3+  h4-  h3-  h4+  h5-  h0  h5+  h2-
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_H = [1,   -1,  2,   3,   -4,  -3,   4,  -5,   0,  5,   -2] + 6
+      !
+      ! ------------------------------------------------------------------------------------------------------------
+      ! Ordering of solid harmonics in Dalton
+      ! ------------------------------------------------------------------------------------------------------------
+      !                                                                    s
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_S = [0, (-1, k=1,10)] + 1
+      !
+      ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
+      ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
+      ! is the same as in Molpro. (Otherwise, the pz orbital corresponding to m=0 would be stored in
+      ! the second element of the array instead of the third.)
+      !                                                                    px py pz
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_P = [1, 2, 3, (0,k=1,8)]
+      !
+      ! Higher-order solid harmonics in Dalton are ordered from -L to L
+      !
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_D = [(k,k=-2,2), (-3,k=1,6)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_F = [(k,k=-3,3), (-4,k=1,4)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_G = [(k,k=-4,4), (-5,k=1,2)] + 5
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_H = [(k,k=-5,5)] + 6
+      !
       ! ------------------------------------------------------------------------------------------------------------
       ! Ordering of Cartesian functions in Molpro
       ! ------------------------------------------------------------------------------------------------------------
@@ -122,7 +144,31 @@ module Auto2eInterface
       
 contains
 
-      subroutine auto2e_interface_AngFuncTransf(X_out, X_in, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
+      subroutine auto2e_interface_AngFuncTransf(X_out, X_in, FromExternalAO, TwoIndexTransf, &
+            AOBasis, ExternalOrdering)
+            !
+            ! Convert AO matrices/vectors between external AO and Auto2e formats.
+            ! The direction the conversion depends on the parameter FromExternalAO
+            !
+            ! X_out
+            !                  Output, converted matrix.
+            ! X_in
+            !                  Input, matrix before conversion.
+            ! FromExternalAO
+            !                  If false: X_in(Auto2e) -> X_out(External program)
+            !                  If true: X_in(External program) -> X_out(Auto2e)
+            ! TwoIndexTransf
+            !                  If true, both row and column indices are transformed.
+            !                  This should be used for the one-electron hamiltonian,
+            !                  overlap matrix, etc. If false, only the row index of X
+            !                  is transformed. This option should be used for MO
+            !                  coefficients in the AO basis stored in columns.
+            ! AOBasis
+            !                  Basis set data.
+            ! ExternalOrdering
+            !                  Speficies the external program, e.g., Molpro, Dalton, Orca.
+            ! 
+            !
             real(F64), dimension(:, :), intent(out) :: X_out
             real(F64), dimension(:, :), intent(in)  :: X_in
             logical, intent(in)                     :: FromExternalAO            
@@ -231,6 +277,9 @@ contains
                   = reshape([MOLPRO_CART_S, MOLPRO_CART_P, MOLPRO_CART_D,  MOLPRO_CART_F, MOLPRO_CART_G, MOLPRO_CART_H], &
                   [Auto2e_MaxAngFuncCart,Auto2e_MaxL+1])
 
+            integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Dalton_AngFuncMap &
+                  = reshape([DALTON_S, DALTON_P, DALTON_D,  DALTON_F, DALTON_G, DALTON_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+
             integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL) :: AngFuncMap
             integer, dimension(Auto2e_MaxAngFuncCart, 0:Auto2e_MaxL) :: CartAngFuncMap
             integer :: kk, L, n
@@ -249,6 +298,8 @@ contains
                         AngFuncMap = Molpro_AngFuncMap
                   case (ORBITAL_ORDERING_ORCA)
                         AngFuncMap = Orca_AngFuncMap
+                  case (ORBITAL_ORDERING_DALTON)
+                        AngFuncMap = Dalton_AngFuncMap
                   case default
                         call msg("Invalid external orbital ordering")
                         error stop
@@ -375,64 +426,4 @@ contains
                   end do
             end if
       end subroutine auto2e_interface_ApplyOrcaPhases_Matrix
-
-
-      ! subroutine auto2e_interface_Test(AOBasis, Rho_cao)
-      !       type(TAOBasis), intent(in)             :: AOBasis
-      !       real(F64), dimension(:, :), intent(in) :: Rho_cao
-
-      !       real(F64), dimension(:, :), allocatable :: S_cao, S_sao, S_mao
-      !       real(F64), dimension(:, :), allocatable :: Rho_sao, Rho_mao
-      !       real(F64), dimension(:), allocatable :: TransfWork
-      !       integer :: NAOSpher, NAOCart, NAO
-      !       logical, parameter :: SpherAO = .true.
-
-      !       NAOSpher = AOBasis%NAOSpher
-      !       NAOCart = AOBasis%NAOCart
-      !       NAO = NAOSpher
-      !       allocate(S_cao(NAOCart, NAOCart))
-      !       allocate(S_sao(NAO, NAO))
-      !       allocate(S_mao(NAO, NAO))
-      !       allocate(Rho_sao(NAO, NAO))
-      !       allocate(Rho_mao(NAO, NAO))
-      !       call ints1e_OverlapMatrix(S_cao, AOBasis)
-      !       call smfill(S_cao)
-      !       allocate(TransfWork(NAOSpher*NAOCart))
-      !       call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
-      !             AOBasis%LmaxGTO, &
-      !             AOBasis%NormFactorsSpher, &
-      !             AOBasis%NormFactorsCart, &
-      !             AOBasis%ShellLocSpher, &
-      !             AOBasis%ShellLocCart, &
-      !             AOBasis%ShellMomentum, &
-      !             AOBasis%ShellParamsIdx, &
-      !             AOBasis%NAOSpher, &
-      !             AOBasis%NAOCart, &
-      !             AOBasis%NShells, TransfWork)
-      !       call SpherGTO_TransformMatrix(Rho_sao, Rho_cao, &
-      !             AOBasis%LmaxGTO, &
-      !             AOBasis%NormFactorsSpher, &
-      !             AOBasis%NormFactorsCart, &
-      !             AOBasis%ShellLocSpher, &
-      !             AOBasis%ShellLocCart, &
-      !             AOBasis%ShellMomentum, &
-      !             AOBasis%ShellParamsIdx, &
-      !             AOBasis%NAOSpher, &
-      !             AOBasis%NAOCart, &
-      !             AOBasis%NShells, TransfWork)
-
-      !       call molpro_AngFuncTransf(S_mao, S_sao, .false., .true., AOBasis)
-      !       call molpro_AngFuncTransf(Rho_mao, Rho_sao, .false., .true., AOBasis)
-            
-      !       call msg("Testing Molpro interface", underline=.true.)
-      !       call blankline()
-      !       call msg("Spherical AO basis loaded from " // AOBasis%FilePath)
-      !       call msg("Overlap matrix in spherical AO basis with Molpro ordering of shells and angular functions")
-      !       call geprn(S_mao)
-      !       call blankline()
-      !       call msg("Density matrix in spherical AO basis with Molpro ordering of shells and angular functions")
-      !       call geprn(Rho_mao)
-      !       call msg("Koniec drukowania")
-      !       stop
-      ! end subroutine auto2e_interface_Test
 end module Auto2eInterface
