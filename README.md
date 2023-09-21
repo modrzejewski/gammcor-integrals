@@ -1,4 +1,4 @@
-# gammcor-cholesky
+# gammcor-integrals
 Authors: Marcin Modrzejewski, Michał Hapka
 ---
 
