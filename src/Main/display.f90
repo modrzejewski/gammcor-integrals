@@ -2,19 +2,34 @@ module display
       use, intrinsic :: iso_fortran_env, only : OUTPUT_UNIT
       use arithmetic
 
-      implicit none
+      implicit none      
       !
       ! Standard output
       !
       integer, parameter :: STDOUNIT = OUTPUT_UNIT
+      ! -------------------------------------
+      ! MESSAGE PRIORITIES
+      ! -------------------------------------
+      !
+      integer, parameter :: MSG_DEBUG  = 0
+      integer, parameter :: MSG_NORMAL = 10
+      integer, parameter :: MSG_WARNING = 80
+      integer, parameter :: MSG_ERROR  = 100
+      !
+      ! Messages whose priority is strictly
+      ! below MSG_PRIORITY_THRESH will not
+      ! be displayed
+      !
+      integer, save :: MSG_PRIORITY_THRESH = MSG_NORMAL
 
 contains
 
-      subroutine msg(s)
+      subroutine msg(s, priority)
             !
             ! Output character string to the standard output
             !
             character(len=*), intent(in)  :: s
+            integer, optional, intent(in) :: priority
 
             write(STDOUNIT, "(1X,A)") s
             flush(STDOUNIT)

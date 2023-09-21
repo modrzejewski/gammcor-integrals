@@ -13,6 +13,9 @@ program test
       use Auto2eInterface
       use OneElectronInts
       use sphergto
+      use BeckeGrid
+      use GridFunctions
+      use grid_definitions
       
       implicit none
 
@@ -25,7 +28,7 @@ program test
       integer :: Units
       logical :: SortAngularMomenta
 
-      Example = "Dalton/water-cc-pVQZ"
+      Example = "Dalton/water-cc-pVDZ"
       RawIntegralsPath = "./examples/" // Example // "/results/AOTWOINT"
       BasisSetPath = "./examples/" // Example // "/basis.txt"
       XYZPath = "./examples/" // Example // "/molecule.xyz"
@@ -35,7 +38,7 @@ program test
       ! AOSource = 2 ! Molpro binary file
       AOSource = 1 ! Dalton binary file
       SpherAO = .true.
-      Accuracy = CHOL_ACCURACY_DEBUG
+      Accuracy = CHOL_ACCURACY_LUDICROUS
       ExternalOrdering = ORBITAL_ORDERING_DALTON
       Units = SYS_UNITS_BOHR
       if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
@@ -51,6 +54,8 @@ program test
       call test_Dalton(XYZPath, Units, BasisSetPath)
       call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, HFOrbitalsPath, &
             AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
+      call test_Grid(BasisSetPath, XYZPath, HFOrbitalsPath, &
+            AOSource, SpherAO, ExternalOrdering, SortAngularMomenta, Units)
       
       
   !    call test_Fock_Molpro(BasisSetPath, XYZPath, HFOrbitalsPath, SpherAO, Accuracy)
@@ -86,14 +91,6 @@ contains
             
             call auto2e_init()
             call sys_Read_XYZ(System, XYZPath, Units)
-
-            block
-                  integer :: k
-                  do k = 1, System%NAtoms
-                        print *, System%AtomCoords(:, k)
-                  end do
-            end block
-            
             call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
 
             NAOSpher = AOBasis%NAOSpher
@@ -441,4 +438,89 @@ contains
 
             call boys_free()
       end subroutine test_Dalton
+
+
+      subroutine test_Grid(BasisSetPath, XYZPath, NaturalOrbitalsPath, &
+            AOSource, SpherAO, ExternalOrdering, SortAngularMomenta, Units)
+            
+            character(*), intent(in) :: BasisSetPath
+            character(*), intent(in) :: XYZPath
+            character(*), intent(in) :: NaturalOrbitalsPath
+            integer, intent(in)      :: AOSource
+            logical, intent(in)      :: SpherAO
+            integer, intent(in)      :: ExternalOrdering
+            logical, intent(in)      :: SortAngularMomenta
+            integer, intent(in)      :: Units
+
+            integer :: NAO
+            integer :: iunit
+            real(F64), dimension(:, :), allocatable :: CAONO, CSAONO
+            integer, parameter :: MaxBufferDimMB = 10 ! buffer for mo transf, in megabytes
+
+            integer :: NPoints
+            real(F64), dimension(:), allocatable :: Xg, Yg, Zg, Wg
+            real(F64), dimension(:, :), allocatable :: Phi
+            real(F64), dimension(:, :), allocatable :: PhiOcc, C_ao
+            integer, parameter :: GridType = BECKE_PARAMS_MEDIUM
+            integer :: NOcc
+            real(F64) :: OccNumber
+            real(F64) :: RhoIntegral
+            type(TAOBasis) :: AOBasis
+            type(TSystem) :: System
+                        
+            call auto2e_init()
+            call sys_Read_XYZ(System, XYZPath, Units)
+            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+            if (AOBasis%SpherAO) then
+                  NAO = AOBasis%NAOSpher
+            else
+                  NAO = AOBasis%NAOCart
+            end if
+
+            open(newunit=iunit,file=NaturalOrbitalsPath,form='UNFORMATTED')
+            read(iunit) NAO
+            allocate(CAONO(1:NAO,1:NAO))
+            allocate(CSAONO(1:NAO,1:NAO))
+            read(iunit) CAONO(1:NAO,1:NAO)
+            read(iunit) CSAONO(1:NAO,1:NAO)
+            close(iunit)
+            !
+            ! Molecular grid
+            !
+            call becke_MolecularGrid(Xg, Yg, Zg, Wg, NPoints, GridType, System, AOBasis)
+            !
+            ! Atomic orbitals on the grid
+            !
+            allocate(Phi(NPoints, NAO))            
+            call gridfunc_Orbitals(Phi, Xg, Yg, Zg, NPoints, NAO, AOBasis)
+            !
+            ! Transform MO coefficients to the internal format
+            ! of the Auto2e library
+            !
+            allocate(C_ao(NAO, NAO))
+            block
+                  logical :: FromExternalAO
+                  logical :: TwoIndexTransf
+                  
+                  FromExternalAO = .true. ! AOs from external program -> AOs in the Auto2e format
+                  TwoIndexTransf = .false. ! Transform only the index p of C(p,k)
+                  call auto2e_interface_AngFuncTransf(C_ao, CAONO, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
+                  if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
+                        call auto2e_interface_ApplyOrcaPhases_Matrix(C_ao, AOBasis, TwoIndexTransf)
+                  end if
+            end block
+            !
+            ! Transform AOs on the grid to occupied orbitals on the grid
+            !
+            NOcc = System%NElectrons / 2
+            call msg("Number of occupied orbitals: " // str(NOcc))
+            allocate(PhiOcc(NPoints, NOcc))
+            call linalg_ab(PhiOcc, Phi, C_ao(:, 1:NOcc))
+            !
+            ! Test: compute density integral
+            !
+            OccNumber = TWO
+            call gridfunc_RhoIntegral(RhoIntegral, PhiOcc(:, 1:NOcc), Wg, OccNumber)
+            call msg("Density integral: " // str(RhoIntegral,d=6))
+      end subroutine test_Grid
 end program test

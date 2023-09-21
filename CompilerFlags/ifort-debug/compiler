@@ -1,0 +1,1 @@
+ifort -coarray=single -qopenmp -O0 -check all -g -no-prec-div -qmkl -warn all -assume byterecl -I{Include} -c

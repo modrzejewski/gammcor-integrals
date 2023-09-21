@@ -46,6 +46,128 @@ module periodic
             "THALLIUM    ", "LEAD        ", "BISMUTH     ", "POLONIUM    ", "ASTATINE    ", &
             "RADON       "]
 
+      ! ---------------------------------------------------------------
+      ! ATOMIC RADII (USED FOR INTEGRATION ON THE MOLECULAR GRID)
+      ! ---------------------------------------------------------------
+      ! 1. Gill, P., Johnson, B.G., Pople, J.A., 
+      !    A standard grid for density functional calculations,
+      !    Chem. Phys. Lett. 209, 506 (1993)
+      ! 2. Ghosh, D. C. and Biswas, R., Theoretical Calculation of
+      !    Absolute Radii of Atoms and Ions. Part 1. The Atomic Radii,
+      !    Int. J. Mol. Sci. 3, 87 (2002)
+      ! ---------------------------------------------------------------
+      ! All values are written in atomic units. Radii for H...Ar are
+      ! taken from Table 1 in [1]. Radii for K...Lr are taken from
+      ! Table 1 in [2].
+      !
+      real(F64), dimension(103), parameter   :: ATOMIC_RADII = [ &
+            1.0000d+0, & ! 1  H    
+            0.5882d+0, & ! 2  He
+            
+            3.0769d+0, & ! 3  Li
+            2.0513d+0, & ! 4  Be
+            1.5385d+0, & ! 5  B
+            1.2308d+0, & ! 6  C
+            1.0256d+0, & ! 7  N
+            0.8791d+0, & ! 8  O
+            0.7692d+0, & ! 9  F
+            0.6838d+0, & ! 10 Ne
+            
+            4.0909d+0, & ! 11 Na
+            3.1579d+0, & ! 12 Mg
+            2.5714d+0, & ! 13 Al
+            2.1687d+0, & ! 14 Si
+            1.8750d+0, & ! 15 P
+            1.6514d+0, & ! 16 S
+            1.4754d+0, & ! 17 Cl
+            1.3333d+0, & ! 18 Ar
+            
+            6.7270d+0, & ! 19 K
+            5.1928d+0, & ! 20
+            4.9333d+0, & ! 21
+            4.6980d+0, & ! 22
+            4.4847d+0, & ! 23
+            4.2899d+0, & ! 24
+            4.1109d+0, & ! 25
+            3.9467d+0, & ! 26
+            3.7946d+0, & ! 27
+            3.6542d+0, & ! 28
+            3.5240d+0, & ! 29
+            3.4023d+0, & ! 30
+            2.9599d+0, & ! 31
+            2.6195d+0, & ! 32
+            2.3491d+0, & ! 33
+            2.1295d+0, & ! 34
+            1.9474d+0, &
+            1.7939d+0, &
+            9.0907d+0, &
+            7.0175d+0, &
+            6.6666d+0, &
+            6.3491d+0, &
+            6.0605d+0, &
+            5.7971d+0, &
+            5.5554d+0, &
+            5.3332d+0, &
+            5.1281d+0, &
+            4.9382d+0, &
+            4.7619d+0, &
+            4.5977d+0, &
+            4.0000d+0, &
+            3.5398d+0, &
+            3.1746d+0, &
+            2.8777d+0, &
+            2.6316d+0, &
+            2.4241d+0, &
+            11.4546d+0, &
+            8.8417d+0, &
+            7.2002d+0, &
+            6.0723d+0, &
+            5.2497d+0, &
+            4.6238d+0, &
+            4.1311d+0, &
+            3.7333d+0, &
+            3.4053d+0, &
+            3.1303d+0, &
+            2.8966d+0, &
+            2.6951d+0, &
+            2.5199d+0, &
+            2.3661d+0, &
+            2.2301d+0, &
+            2.1087d+0, &
+            1.9999d+0, &
+            1.9047d+0, &
+            1.8130d+0, &
+            1.7319d+0, &
+            1.6579d+0, &
+            1.5898d+0, &
+            1.5462d+0, &
+            1.4695d+0, &
+            1.4158d+0, &
+            5.7894d+0, &
+            5.0399d+0, &
+            4.4603d+0, &
+            4.0000d+0, &
+            3.6258d+0, &
+            3.3157d+0, &
+            3.0546d+0, &
+            13.6824d+0, &
+            10.5611d+0, &
+            10.0327d+0, &
+            9.5562d+0, &
+            6.9999d+0, &
+            6.0806d+0, &
+            5.3749d+0, &
+            4.4590d+0, &
+            4.0676d+0, &
+            3.9868d+0, &
+            3.4597d+0, &
+            3.2191d+0, &
+            3.0100d+0, &
+            2.8263d+0, &
+            2.6638d+0, &
+            2.5188d+0, &
+            2.4876d+0 ] ! 103 Lr
+
 contains
 
       function znumber_long(longname)
@@ -110,4 +232,26 @@ contains
                   end if
             end do kloop
       end function znumber_short
+
+      
+      function periodic_table_row(z)
+            integer :: periodic_table_row
+            integer, intent(in) :: z
+            
+            if (z <= 2) then
+                  periodic_table_row = 0
+            else if (z <= 10) then
+                  periodic_table_row = 1
+            else if (z <= 18) then
+                  periodic_table_row = 2
+            else if (z <= 36) then
+                  periodic_table_row = 3
+            else if (z <= 54) then
+                  periodic_table_row = 4
+            else if (z <= 86) then
+                  periodic_table_row = 5
+            else
+                  periodic_table_row = 6
+            end if
+      end function periodic_table_row
 end module periodic
