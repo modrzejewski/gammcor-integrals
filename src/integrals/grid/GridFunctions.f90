@@ -6,8 +6,53 @@ module GridFunctions
 
       implicit none
 
+      integer, parameter :: GRID_ORBITAL_VALUE = 1
+      integer, parameter :: GRID_ORBITAL_GRAD_X = 2
+      integer, parameter :: GRID_ORBITAL_GRAD_Y = 3
+      integer, parameter :: GRID_ORBITAL_GRAD_Z = 4
+
 contains
 
+      subroutine gridfunc_GGA_Variables(Rho, Phi, C, OccNumbers)
+            real(F64), dimension(:, :), intent(out)   :: Rho
+            real(F64), dimension(:, :, :), intent(in) :: Phi
+            real(F64), dimension(:, :), intent(in)    :: C
+            real(F64), dimension(:), intent(in)       :: OccNumbers
+
+            integer :: NPoints, NMO
+            integer :: i
+            real(F64), dimension(:, :), allocatable :: W, Wx
+
+            NPoints = size(Phi, dim=1)
+            NMO = size(C, dim=2)
+            allocate(W(NPoints, NMO))
+            allocate(Wx(NPoints, NMO))
+            call linalg_ab(W, Phi(:, :, 1), C)
+            call multiply_W_W(Rho(:, 1), W, W, OccNumbers)
+            do i = 2, 4
+                  call linalg_ab(Wx, Phi(:, :, i), C)
+                  call multiply_W_W(Rho(:, i), W, Wx, OccNumbers)
+                  Rho(:, i) = TWO * Rho(:, i)
+            end do
+            
+      contains
+            
+            subroutine multiply_W_W(Rho, W1, W2, OccNumbers)
+                  real(F64), dimension(:), intent(out)   :: Rho
+                  real(F64), dimension(:, :), intent(in) :: W1
+                  real(F64), dimension(:, :), intent(in) :: W2
+                  real(F64), dimension(:), intent(in)    :: OccNumbers
+
+                  integer :: p
+                  
+                  Rho = ZERO
+                  do p = 1, NMO
+                        Rho(:) = Rho(:) + OccNumbers(p) * W1(:, p) * W2(:, p)
+                  end do
+            end subroutine multiply_W_W
+      end subroutine gridfunc_GGA_Variables
+
+      
       subroutine gridfunc_RhoIntegral(RhoIntegral, Xki, Wk, OccNumber)
             real(F64), intent(out)                 :: RhoIntegral
             real(F64), dimension(:, :), intent(in) :: Xki
@@ -193,6 +238,91 @@ contains
                   end do
             end associate
       end subroutine gridfunc_Orbitals
+
+
+      subroutine gridfunc_Orbitals_Grad(Phi, Xg, Yg, Zg, AOBasis)
+            real(F64), dimension(:, :, :), intent(out) :: Phi
+            real(F64), dimension(:), intent(in)        :: Xg
+            real(F64), dimension(:), intent(in)        :: Yg
+            real(F64), dimension(:), intent(in)        :: Zg
+            type(TAOBasis), intent(in)                 :: AOBasis
+
+            integer :: ShA, ShellParamsA, AtomA, La, NaCart, NaSpher
+            integer :: p0
+            integer :: MaxNAngFuncsCart, MaxNAngFuncsSpher
+            real(F64), dimension(:, :, :), allocatable :: PhiCart, PhiSpher
+            integer :: NPoints, NAO
+
+            NPoints = size(Xg)
+            NAO = size(Phi, dim=3)            
+            associate (NShells => AOBasis%NShells, &
+                  ShellCenters => AOBasis%ShellCenters, &
+                  NormFactorsSpher => AOBasis%NormFactorsSpher, &
+                  NormFactorsCart => AOBasis%NormFactorsCart, &
+                  CartPolyX => AOBasis%CartPolyX, &
+                  CartPolyY => AOBasis%CartPolyY, &
+                  CartPolyZ => AOBasis%CartPolyZ, &
+                  AtomCoords => AOBasis%AtomCoords, &
+                  ShellParamsIdx => AOBasis%ShellParamsIdx, &
+                  CntrCoeffs => AOBasis%CntrCoeffs, &
+                  Exponents => AOBasis%Exponents, &
+                  NPrimitives => AOBasis%NPrimitives, &
+                  NAngFuncSpher => AOBasis%NAngFuncSpher, &
+                  NAngFuncCart => AOBasis%NAngFuncCart, &
+                  ShellMomentum => AOBasis%ShellMomentum, &
+                  ShellLocCart => AOBasis%ShellLocCart, &
+                  ShellLocSpher => AOBasis%ShellLocSpher, &
+                  SpherAO => AOBasis%SpherAO, &
+                  LmaxGTO => AOBasis%LmaxGTO &
+                  )
+                  MaxNAngFuncsCart = ((LmaxGTO + 1) * (LmaxGTO + 2)) / 2
+                  MaxNAngFuncsSpher = 2 * LmaxGTO + 1
+                  allocate(PhiCart(NPoints, MaxNAngFuncsCart, 4))
+                  allocate(PhiSpher(NPoints, MaxNAngFuncsSpher, 4))
+                  do ShA = 1, NShells
+                        AtomA = ShellCenters(ShA)
+                        ShellParamsA = ShellParamsIdx(ShA)
+                        La = ShellMomentum(ShellParamsA)
+                        NaCart = NAngFuncCart(ShellParamsA)
+                        NaSpher = NAngFuncSpher(ShellParamsA)
+                        if (SpherAO) then
+                              p0 = ShellLocSpher(ShA)
+                              call gridfunc_Orbitals_Grad_Shell(Phi, PhiSpher, PhiCart, &
+                                    Xg, Yg, Zg, NPoints, &
+                                    NormFactorsSpher(:, ShellParamsA), &
+                                    NormFactorsCart(:, ShellParamsA), &
+                                    CntrCoeffs(:, ShellParamsA), &
+                                    Exponents(:, ShellParamsA), &
+                                    NPrimitives(ShellParamsA), &
+                                    La, &
+                                    AtomCoords(:, AtomA), &
+                                    CartPolyX(:, La), &
+                                    CartPolyY(:, La), &
+                                    CartPolyZ(:, La), &
+                                    NaSpher, &
+                                    NaCart, &
+                                    SpherAO, p0)
+                        else
+                              p0 = ShellLocCart(ShA)
+                              call gridfunc_Orbitals_Grad_Shell(Phi, PhiSpher, PhiCart, &
+                                    Xg, Yg, Zg, NPoints, &
+                                    NormFactorsSpher(:, ShellParamsA), &
+                                    NormFactorsCart(:, ShellParamsA), &
+                                    CntrCoeffs(:, ShellParamsA), &
+                                    Exponents(:, ShellParamsA), &
+                                    NPrimitives(ShellParamsA), &
+                                    La, &
+                                    AtomCoords(:, AtomA), &
+                                    CartPolyX(:, La), &
+                                    CartPolyY(:, La), &
+                                    CartPolyZ(:, La), &
+                                    NaSpher, &
+                                    NaCart, &
+                                    SpherAO, p0)
+                        end if
+                  end do
+            end associate
+      end subroutine gridfunc_Orbitals_Grad
       
       
       subroutine gridfunc_Orbitals_Shell(PhiSpher, PhiCart, Xg, Yg, Zg, NPoints, NormFactorsSpher, &
@@ -273,4 +403,116 @@ contains
                   PhiSpher = ZERO
             end if
       end subroutine gridfunc_Orbitals_Shell
+
+
+      subroutine gridfunc_Orbitals_Grad_Shell(Phi, PhiSpher, PhiCart, Xg, Yg, Zg, NPoints, NormFactorsSpher, &
+            NormFactorsCart, CntrCoeffs, Exponents, NPrimitives, L, Ra, CartPolyX, CartPolyY, &
+            CartPolyZ, NFuncSpher, NFuncCart, SpherAO, p0)
+
+            real(F64), dimension(:, :, :), intent(inout)              :: Phi
+            real(F64), dimension(NPoints, NFuncSpher, 4), intent(out) :: PhiSpher
+            real(F64), dimension(NPoints, NFuncCart, 4), intent(out)  :: PhiCart
+            real(F64), dimension(:), intent(in)                       :: Xg
+            real(F64), dimension(:), intent(in)                       :: Yg
+            real(F64), dimension(:), intent(in)                       :: Zg
+            integer, intent(in)                                       :: NPoints
+            real(F64), dimension(NFuncCart), intent(in)               :: NormFactorsCart
+            real(F64), dimension(NFuncSpher), intent(in)              :: NormFactorsSpher
+            real(F64), dimension(NPrimitives), intent(in)             :: CntrCoeffs
+            real(F64), dimension(NPrimitives), intent(in)             :: Exponents
+            integer, intent(in)                                       :: NPrimitives
+            integer, intent(in)                                       :: L
+            real(F64), dimension(3), intent(in)                       :: Ra
+            integer, dimension(NFuncCart), intent(in)                 :: CartPolyX
+            integer, dimension(NFuncCart), intent(in)                 :: CartPolyY
+            integer, dimension(NFuncCart), intent(in)                 :: CartPolyZ
+            integer, intent(in)                                       :: NFuncSpher
+            integer, intent(in)                                       :: NFuncCart
+            logical, intent(in)                                       :: SpherAO
+            integer, intent(in)                                       :: p0
+            
+            real(F64) :: Xga, Yga, Zga, XgaLx, YgaLy, ZgaLz
+            real(F64) :: DXgaLx, DYgaLy, DZgaLz, XYZ
+            integer :: Lx, Ly, Lz
+            integer :: k, i, v
+            real(F64) :: CExpR2
+            real(F64) :: R2, PhiRadial, PhiRadial_x, PhiRadial_y, PhiRadial_z
+
+            !$omp parallel do private(k, i, Xga, Yga, Zga, R2, PhiRadial) &
+            !$omp private(PhiRadial_x, PhiRadial_y, PhiRadial_z, CExpR2) &
+            !$omp shared(PhiCart) &
+            !$omp default(shared)
+            do k = 1, NPoints
+                  Xga = Xg(k) - Ra(1)
+                  Yga = Yg(k) - Ra(2)
+                  Zga = Zg(k) - Ra(3)
+                  R2 = Xga**2 + Yga**2 + Zga**2
+                  PhiRadial = ZERO
+                  PhiRadial_x = ZERO
+                  PhiRadial_y = ZERO
+                  PhiRadial_z = ZERO
+                  do i = 1, NPrimitives
+                        CExpR2 = CntrCoeffs(i) * exp(-Exponents(i) * R2)
+                        PhiRadial = PhiRadial + CExpR2
+                        PhiRadial_x = PhiRadial_x - TWO * Exponents(i) * Xga * CExpR2
+                        PhiRadial_y = PhiRadial_y - TWO * Exponents(i) * Yga * CExpR2
+                        PhiRadial_z = PhiRadial_z - TWO * Exponents(i) * Zga * CExpR2
+                  end do
+                  PhiCart(k, 1, GRID_ORBITAL_VALUE) = PhiRadial
+                  PhiCart(k, 1, GRID_ORBITAL_GRAD_X) = PhiRadial_x
+                  PhiCart(k, 1, GRID_ORBITAL_GRAD_Y) = PhiRadial_y
+                  PhiCart(k, 1, GRID_ORBITAL_GRAD_Z) = PhiRadial_z
+            end do
+            !$omp end parallel do
+            do i = 1, 4
+                  do v = 2, NFuncCart
+                        PhiCart(:, v, i) = PhiCart(:, 1, i)
+                  end do
+            end do
+            !$omp parallel do private(v, k) collapse(2) &
+            !$omp private(Lx, Ly, Lz, Xga, Yga, Zga, XgaLx, YgaLy, ZgaLz) &
+            !$omp private(DXgaLx, DYgaLy, DZgaLz, PhiRadial, XYZ) &
+            !$omp private(PhiRadial_x, PhiRadial_y, PhiRadial_z) &
+            !$omp shared(PhiCart) &
+            !$omp default(shared)
+            do v = 1, NFuncCart
+                  do k = 1, NPoints
+                        Lx = CartPolyX(v)
+                        Ly = CartPolyY(v)
+                        Lz = CartPolyZ(v)
+                        Xga = Xg(k) - Ra(1)
+                        Yga = Yg(k) - Ra(2)
+                        Zga = Zg(k) - Ra(3)
+                        XgaLx = Xga**Lx
+                        YgaLy = Yga**Ly
+                        ZgaLz = Zga**Lz
+                        DXgaLx = Lx * Xga**(max(0, Lx-1))
+                        DYgaLy = Ly * Yga**(max(0, Ly-1))
+                        DZgaLz = Lz * Zga**(max(0, Lz-1))
+                        PhiRadial = PhiCart(k, v, GRID_ORBITAL_VALUE)
+                        PhiRadial_x = PhiCart(k, v, GRID_ORBITAL_GRAD_X)
+                        PhiRadial_y = PhiCart(k, v, GRID_ORBITAL_GRAD_Y)
+                        PhiRadial_z = PhiCart(k, v, GRID_ORBITAL_GRAD_Z)
+                        XYZ = XgaLx * YgaLy * ZgaLz
+                        PhiCart(k, v, GRID_ORBITAL_VALUE) = XYZ * PhiRadial
+                        PhiCart(k, v, GRID_ORBITAL_GRAD_X) = XYZ * PhiRadial_x + DXgaLx*YgaLy*ZgaLz * PhiRadial
+                        PhiCart(k, v, GRID_ORBITAL_GRAD_Y) = XYZ * PhiRadial_y + XgaLx*DYgaLy*ZgaLz * PhiRadial
+                        PhiCart(k, v, GRID_ORBITAL_GRAD_Z) = XYZ * PhiRadial_z + XgaLx*YgaLy*DZgaLz * PhiRadial
+                  end do
+            end do
+            !$omp end parallel do
+            do i = 1, 4
+                  if (SpherAO) then
+                        call Auto1e_SpherTransf_U_Vector(L)%ptr(PhiSpher(:, :, i), PhiCart(:, :, i), NPoints)
+                        do v = 1, NFuncSpher
+                              Phi(:, p0+v-1, i) = NormFactorsSpher(v) * PhiSpher(:, v, i)
+                        end do
+                  else
+                        do v = 1, NFuncCart
+                              Phi(:, p0+v-1, i) = NormFactorsCart(v) * PhiCart(:, v, i)
+                        end do
+                  end if
+            end do
+            if (.not. SpherAO) PhiSpher = ZERO
+      end subroutine gridfunc_Orbitals_Grad_Shell
 end module GridFunctions

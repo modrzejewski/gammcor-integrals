@@ -459,14 +459,17 @@ contains
 
             integer :: NPoints
             real(F64), dimension(:), allocatable :: Xg, Yg, Zg, Wg
-            real(F64), dimension(:, :), allocatable :: Phi
-            real(F64), dimension(:, :), allocatable :: PhiOcc, C_ao
-            integer, parameter :: GridType = BECKE_PARAMS_MEDIUM
+            real(F64), dimension(:, :, :), allocatable :: Phi
+            real(F64), dimension(:, :), allocatable :: C_ao
+            integer, parameter :: GridType = BECKE_PARAMS_FINE
             integer :: NOcc
             real(F64) :: OccNumber
-            real(F64) :: RhoIntegral
+            real(F64) :: RhoIntegral, DivRhoIntegral
             type(TAOBasis) :: AOBasis
             type(TSystem) :: System
+            real(F64), dimension(:), allocatable :: OccNumbers
+            real(F64), dimension(:, :), allocatable :: Rho
+            integer :: k
                         
             call auto2e_init()
             call sys_Read_XYZ(System, XYZPath, Units)
@@ -489,38 +492,46 @@ contains
             !
             call becke_MolecularGrid(Xg, Yg, Zg, Wg, NPoints, GridType, System, AOBasis)
             !
-            ! Atomic orbitals on the grid
+            ! Atomic orbitals and gradient components on the grid
+            ! Phi(k, p, i)
+            ! k grid point
+            ! p index of AO
+            ! i = 1 (value), 2 (d/dx), 3 (d/dy), 4 (d/dz)
             !
-            allocate(Phi(NPoints, NAO))            
-            call gridfunc_Orbitals(Phi, Xg, Yg, Zg, NPoints, NAO, AOBasis)
+            allocate(Phi(NPoints, NAO, 4))
+            call gridfunc_Orbitals_Grad(Phi, Xg, Yg, Zg, AOBasis)
             !
-            ! Transform MO coefficients to the internal format
-            ! of the Auto2e library
+            ! MO coefficients (external format) -> MO coefficients (native format)
             !
             allocate(C_ao(NAO, NAO))
-            block
-                  logical :: FromExternalAO
-                  logical :: TwoIndexTransf
-                  
-                  FromExternalAO = .true. ! AOs from external program -> AOs in the Auto2e format
-                  TwoIndexTransf = .false. ! Transform only the index p of C(p,k)
-                  call auto2e_interface_AngFuncTransf(C_ao, CAONO, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
-                  if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
-                        call auto2e_interface_ApplyOrcaPhases_Matrix(C_ao, AOBasis, TwoIndexTransf)
-                  end if
-            end block
+            call auto2e_interface_C(C_ao, CAONO, AOBasis, ExternalOrdering)
             !
-            ! Transform AOs on the grid to occupied orbitals on the grid
+            ! Occupation numbers (fake)
             !
             NOcc = System%NElectrons / 2
-            call msg("Number of occupied orbitals: " // str(NOcc))
-            allocate(PhiOcc(NPoints, NOcc))
-            call linalg_ab(PhiOcc, Phi, C_ao(:, 1:NOcc))
+            allocate(OccNumbers(NAO))
+            OccNumbers = ZERO
+            OccNumbers(1:NOcc) = TWO
             !
-            ! Test: compute density integral
+            ! Rho and GradRho values on the grid
+            ! Rho(k, i)
+            ! k grid point
+            ! i = 1 (rho value), 2 (dRho/dx), 3 (dRho/dy), 4 (dRho/dz)
             !
-            OccNumber = TWO
-            call gridfunc_RhoIntegral(RhoIntegral, PhiOcc(:, 1:NOcc), Wg, OccNumber)
-            call msg("Density integral: " // str(RhoIntegral,d=6))
+            allocate(Rho(NPoints, 4))
+            call gridfunc_GGA_Variables(Rho, Phi, C_ao, OccNumbers)
+            !
+            ! Tests:
+            ! * integral of Rho over the whole space (exact value: number of electrons)
+            ! * integral of div(Rho) over the whole space (exact value: zero)
+            !
+            DivRhoIntegral = ZERO
+            RhoIntegral = ZERO
+            do k = 1, NPoints
+                  RhoIntegral = RhoIntegral + Wg(k) * Rho(k, 1)
+                  DivRhoIntegral = DivRhoIntegral + Wg(k) * (Rho(k, 2) + Rho(k, 3) + Rho(k, 4))
+            end do
+            call msg("Rho integral    " // str(RhoIntegral,d=6))
+            call msg("DivRho integral " // str(DivRhoIntegral,d=6))
       end subroutine test_Grid
 end program test
