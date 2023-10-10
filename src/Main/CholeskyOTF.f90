@@ -1501,7 +1501,7 @@ contains
 
 
       subroutine chol_CoulombMatrix_B(CholeskyVecs, AOBasis, TargetTraceError, TargetMaxError, &
-            TargetErrorPrescreen, MaxNAOMult, MaxBlockDim)
+            TargetErrorPrescreen, MaxNAOMult, MaxBlockDim, Kappa)
             !
             ! Generate the Cholesky vectors matrix R: V = R**T * R, where V is the matrix
             ! of two electron Coulomb integrals (pq|rs).
@@ -1513,14 +1513,14 @@ contains
             real(F64), intent(in)                                     :: TargetErrorPrescreen
             integer, intent(in)                                       :: MaxNAOMult
             integer, intent(in)                                       :: MaxBlockDim
-
-            integer :: MaxNShellPairs
             !
             ! Nonzero Kappa is used only for range-seprated Coulomb integrals with erf(omega*r)/r.
             ! Kappa = 0 implies full-range Coulomb operator.
             !
-            real(F64), parameter :: Kappa = ZERO
-            
+            real(F64), intent(in)                                     :: Kappa
+
+            integer :: MaxNShellPairs
+
             MaxNShellPairs = (AOBasis%NShells * (AOBasis%NShells + 1)) / 2
             allocate(CholeskyVecs%ShellPairs(2, MaxNShellPairs))
             allocate(CholeskyVecs%ShellPairLoc(3, MaxNShellPairs))
@@ -1591,7 +1591,7 @@ contains
       end subroutine chol_CoulombMatrix_B
 
 
-      subroutine chol_CoulombMatrix_OTF(CholeskyVecs, Accuracy, AOBasis)
+      subroutine chol_CoulombMatrix_OTF(CholeskyVecs, Accuracy, AOBasis, Omega)
             !
             ! Generate the Cholesky vectors matrix R: V = R**T * R, where V is the matrix
             ! of two electron Coulomb integrals (pq|rs).
@@ -1599,15 +1599,25 @@ contains
             type(TCholeskyVecsOTF), intent(out)                       :: CholeskyVecs
             integer, intent(in)                                       :: Accuracy
             type(TAOBasis), intent(in)                                :: AOBasis
+            real(F64), optional, intent(in)                           :: Omega
             
             real(F64) :: TargetTraceError, TargetTraceErrorPrescreen, TargetMaxError
             integer :: MaxNAOMult
             integer, parameter :: MaxBlockDim = 4000
+            real(F64) :: Kappa
 
+            if (present(Omega)) then
+                  if (Omega > ZERO) then
+                        Kappa = ONE / Omega**2
+                  else
+                        Kappa = ZERO
+                  end if
+            else
+                  Kappa = ZERO
+            end if
             call chol_NumericalThresholds(TargetTraceError, TargetTraceErrorPrescreen, &
-                  TargetMaxError, MaxNAOMult, Accuracy)
-
+                  TargetMaxError, MaxNAOMult, Accuracy)            
             call chol_CoulombMatrix_B(CholeskyVecs, AOBasis, TargetTraceError, TargetMaxError, &
-                  TargetTraceErrorPrescreen, MaxNAOMult, MaxBlockDim)
+                  TargetTraceErrorPrescreen, MaxNAOMult, MaxBlockDim, Kappa)
       end subroutine chol_CoulombMatrix_OTF
 end module CholeskyOTF

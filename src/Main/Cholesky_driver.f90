@@ -101,13 +101,14 @@ contains
       end subroutine chol_Rkpq_ExternalBinary
 
 
-      subroutine chol_Rkpq_OTF(CholeskyVecsOTF, AOBasis, Accuracy)
+      subroutine chol_Rkpq_OTF(CholeskyVecsOTF, AOBasis, Accuracy, Omega)
             !
             ! Cholesky vectors in AO basis computed on the fly.
             !
             type(TCholeskyVecsOTF), intent(out)                  :: CholeskyVecsOTF
             type(TAOBasis), intent(in)                           :: AOBasis
             integer, intent(in)                                  :: Accuracy
+            real(F64), optional, intent(in)                      :: Omega
             !
             ! Initialize the molecular integrals library.
             ! The init subroutine binds subroutines to subroutine pointers.
@@ -125,7 +126,11 @@ contains
             !
             ! Compute the Cholesky vectors is AO basis
             !
-            call chol_CoulombMatrix_OTF(CholeskyVecsOTF, Accuracy, AOBasis)
+            if (present(Omega)) then
+                  call chol_CoulombMatrix_OTF(CholeskyVecsOTF, Accuracy, AOBasis, Omega)
+            else
+                  call chol_CoulombMatrix_OTF(CholeskyVecsOTF, Accuracy, AOBasis)
+            end if
             !
             ! Deallocate the Boys function interpolation tables
             ! to avoid allocation of already allocated arrays
