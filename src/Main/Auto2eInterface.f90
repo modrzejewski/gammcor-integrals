@@ -15,6 +15,7 @@ module Auto2eInterface
       integer, parameter :: ORBITAL_ORDERING_MOLPRO = 1
       integer, parameter :: ORBITAL_ORDERING_ORCA = 2
       integer, parameter :: ORBITAL_ORDERING_DALTON = 3
+      integer, parameter :: ORBITAL_ORDERING_OPEN_MOLCAS = 4
 
       integer, parameter, private :: Auto2e_MaxAngFuncSpher = 2 * Auto2e_MaxL + 1
       integer, parameter, private :: Auto2e_MaxAngFuncCart = ((Auto2e_MaxL+1)*(Auto2e_MaxL+2))/2
@@ -80,6 +81,57 @@ module Auto2eInterface
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_F = [(k,k=-3,3), (-4,k=1,4)] + 4
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_G = [(k,k=-4,4), (-5,k=1,2)] + 5
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_H = [(k,k=-5,5)] + 6
+      !
+      ! ------------------------------------------------------------------------------------------------------------
+      ! Ordering of solid harmonics in Open Molcas
+      ! Within each atom, the orbitals are sorted as in the following example.
+      !
+      ! Atom 1
+      !
+      ! shell 1: s
+      ! shell 2: p
+      ! shell 3: p
+      ! shell 4: d
+      ! shell 5: d
+      ! shell 6: s
+      !
+      ! Ordering of atomic orbitals wihtin Atom 1
+      !
+      ! s   <--- shell 1
+      ! s   <--- shell 6
+      ! px  <--- shell 2
+      ! px  <--- shell 3
+      ! py  <--- shell 2
+      ! py  <--- shell 3
+      ! pz  <--- shell 2
+      ! pz  <--- shell 3
+      ! d-2 <--- shell 4
+      ! d-2 <--- shell 5
+      ! d-1 <--- shell 4
+      ! d-1 <--- shell 5
+      ! d0  <--- shell 4
+      ! d0  <--- shell 5
+      ! d+1 <--- shell 4
+      ! d+1 <--- shell 5
+      ! d+2 <--- shell 4
+      ! d+2 <--- shell 5
+      ! ------------------------------------------------------------------------------------------------------------
+      !
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_S = [0, (-1, k=1,10)] + 1
+      !
+      ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
+      ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
+      ! is the same as in Molpro. (Otherwise, the pz orbital corresponding to m=0 would be stored in
+      ! the second element of the array instead of the third.)
+      !                                                                         px py pz
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_P = [1, 2, 3, (0,k=1,8)]
+      !
+      ! Higher-order solid harmonics in Dalton are ordered from -L to L
+      !
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_D = [(k,k=-2,2), (-3,k=1,6)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_F = [(k,k=-3,3), (-4,k=1,4)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_G = [(k,k=-4,4), (-5,k=1,2)] + 5
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_H = [(k,k=-5,5)] + 6
       !
       ! ------------------------------------------------------------------------------------------------------------
       ! Ordering of Cartesian functions in Molpro
@@ -298,17 +350,25 @@ contains
             integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Dalton_AngFuncMap &
                   = reshape([DALTON_S, DALTON_P, DALTON_D,  DALTON_F, DALTON_G, DALTON_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
 
+            integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Open_Molcas_AngFuncMap &
+                  = reshape([OPEN_MOLCAS_S, OPEN_MOLCAS_P, OPEN_MOLCAS_D, OPEN_MOLCAS_F, OPEN_MOLCAS_G, OPEN_MOLCAS_H], &
+                  [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+
             integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL) :: AngFuncMap
             integer, dimension(Auto2e_MaxAngFuncCart, 0:Auto2e_MaxL) :: CartAngFuncMap
             integer :: kk, L, n
             integer :: p0, p1, p
             integer :: NAO
+            integer :: a, s0, s1, s
+            integer :: M, i
+            logical :: SortedAngularFunctions
 
             if (AOBasis%SpherAO) then
                   NAO = AOBasis%NAOSpher
             else
                   NAO = AOBasis%NAOCart
             end if
+            SortedAngularFunctions = .false.
             Map_extao2ao = -1
             if (AOBasis%SpherAO) then
                   select case (ExternalOrdering)
@@ -318,6 +378,9 @@ contains
                         AngFuncMap = Orca_AngFuncMap
                   case (ORBITAL_ORDERING_DALTON)
                         AngFuncMap = Dalton_AngFuncMap
+                  case (ORBITAL_ORDERING_OPEN_MOLCAS)
+                        AngFuncMap = Open_Molcas_AngFuncMap
+                        SortedAngularFunctions = .true.
                   case default
                         call msg("Invalid external orbital ordering")
                         error stop
@@ -328,18 +391,40 @@ contains
                         ShellMomentum => AOBasis%ShellMomentum, &
                         NAngFunc => AOBasis%NAngFuncSpher, &
                         NShells => AOBasis%NShells, &
-                        NAO => AOBasis%NAOSpher &
+                        NAO => AOBasis%NAOSpher, &
+                        NAtoms => AOBasis%NAtoms, &
+                        AtomShellMap => AOBasis%AtomShellMap, &
+                        MaxAtomL => AOBasis%MaxAtomL &
                         )
-                        do kk = 1, NShells
-                              k = ShellParamsIdx(kk)
-                              L = ShellMomentum(k)
-                              n = NAngFunc(k)
-                              p0 = ShellLoc(kk)
-                              p1 = ShellLoc(kk) + n - 1
-                              do p = p0, p1
-                                    Map_extao2ao(p) = p0 + AngFuncMap(p-p0+1, L) - 1
+                        if (SortedAngularFunctions) then
+                              do a = 1, NAtoms
+                                    s0 = AtomShellMap(1, 1, a)
+                                    s1 = AtomShellMap(2, 1, a)
+                                    i = ShellLoc(s0)
+                                    do L = 0, MaxAtomL(a)
+                                          do M = 1, 2 * L + 1
+                                                do s = s0, s1
+                                                      k = ShellParamsIdx(s)
+                                                      if (L == ShellMomentum(k)) then
+                                                            Map_extao2ao(i) = ShellLoc(s) + AngFuncMap(M, L) - 1
+                                                            i = i + 1
+                                                      end if
+                                                end do
+                                          end do
+                                    end do
                               end do
-                        end do
+                        else                              
+                              do kk = 1, NShells
+                                    k = ShellParamsIdx(kk)
+                                    L = ShellMomentum(k)
+                                    n = NAngFunc(k)
+                                    p0 = ShellLoc(kk)
+                                    p1 = ShellLoc(kk) + n - 1
+                                    do p = p0, p1
+                                          Map_extao2ao(p) = p0 + AngFuncMap(p-p0+1, L) - 1
+                                    end do
+                              end do
+                        end if
                   end associate
             else
                   select case (ExternalOrdering)
@@ -356,7 +441,7 @@ contains
                         NAngFunc => AOBasis%NAngFuncCart, &
                         NShells => AOBasis%NShells, &
                         NAO => AOBasis%NAOCart &
-                        )
+                        )                        
                         do kk = 1, NShells
                               k = ShellParamsIdx(kk)
                               L = ShellMomentum(k)
@@ -366,7 +451,7 @@ contains
                               do p = p0, p1
                                     Map_extao2ao(p) = p0 + CartAngFuncMap(p-p0+1, L) - 1
                               end do
-                        end do
+                        end do                        
                   end associate
             end if
             do p = 1, NAO

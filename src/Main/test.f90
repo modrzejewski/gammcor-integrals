@@ -28,7 +28,7 @@ program test
       integer :: Units
       logical :: SortAngularMomenta
 
-      Example = "Dalton/water-cc-pVDZ"
+      Example = "Molcas/water/cc-pVTZ/emsl"
       RawIntegralsPath = "./examples/" // Example // "/results/AOTWOINT"
       BasisSetPath = "./examples/" // Example // "/basis.txt"
       XYZPath = "./examples/" // Example // "/molecule.xyz"
@@ -40,7 +40,7 @@ program test
       SpherAO = .true.
       Accuracy = CHOL_ACCURACY_LUDICROUS
       ExternalOrdering = ORBITAL_ORDERING_DALTON
-      Units = SYS_UNITS_BOHR
+      Units = SYS_UNITS_ANGSTROM
       if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
             SortAngularMomenta = .false.
       else if (ExternalOrdering == ORBITAL_ORDERING_MOLPRO) then
@@ -51,11 +51,13 @@ program test
             call msg("Check angular momenta ordering")
       end if
 
-      call test_Dalton(XYZPath, Units, BasisSetPath)
-      call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, HFOrbitalsPath, &
-            AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
-      call test_Grid(BasisSetPath, XYZPath, HFOrbitalsPath, &
-            AOSource, SpherAO, ExternalOrdering, SortAngularMomenta, Units)
+      call test_molcas(XYZPath, Units, BasisSetPath)
+      
+!      call test_Dalton(XYZPath, Units, BasisSetPath)
+      ! call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, HFOrbitalsPath, &
+      !       AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
+      ! call test_Grid(BasisSetPath, XYZPath, HFOrbitalsPath, &
+      !       AOSource, SpherAO, ExternalOrdering, SortAngularMomenta, Units)
       
       
   !    call test_Fock_Molpro(BasisSetPath, XYZPath, HFOrbitalsPath, SpherAO, Accuracy)
@@ -130,6 +132,65 @@ contains
             call geprn(S_extao)
             call msg("--- end of Orca overlap matrix ---")
       end subroutine test_orca
+
+
+      subroutine test_molcas(XYZPath, Units, BasisSetPath)
+            character(*), intent(in) :: XYZPath
+            integer, intent(in)      :: Units
+            character(*), intent(in) :: BasisSetPath
+
+            type(TSystem) :: System
+            type(TAOBasis) :: AOBasis
+            real(F64), dimension(:, :), allocatable :: S_cao, S_sao, S_extao, S_extao_2
+            real(F64), dimension(:), allocatable :: TransfWork
+            integer :: NAOSpher
+            integer :: NAOCart
+            integer :: NAO
+            logical, parameter :: SpherAO = .true.
+            logical, parameter :: SortAngularMomenta = .false.
+            
+            
+            call auto2e_init()
+            call sys_Read_XYZ(System, XYZPath, Units)
+            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            NAOSpher = AOBasis%NAOSpher
+            NAOCart = AOBasis%NAOCart
+            NAO = NAOSpher
+            
+            allocate(S_cao(NAOCart, NAOCart))
+            allocate(S_sao(NAO, NAO))
+            allocate(S_extao(NAO, NAO))
+            allocate(S_extao_2(NAO, NAO))
+
+            call ints1e_OverlapMatrix(S_cao, AOBasis)            
+            call linalg_smfill(S_cao)
+
+            allocate(TransfWork(NAOSpher*NAOCart))
+            call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
+                  AOBasis%LmaxGTO, &
+                  AOBasis%NormFactorsSpher, &
+                  AOBasis%NormFactorsCart, &
+                  AOBasis%ShellLocSpher, &
+                  AOBasis%ShellLocCart, &
+                  AOBasis%ShellMomentum, &
+                  AOBasis%ShellParamsIdx, &
+                  AOBasis%NAOSpher, &
+                  AOBasis%NAOCart, &
+                  AOBasis%NShells, TransfWork)
+
+            call auto2e_interface_AngFuncTransf(S_extao_2, S_sao, .false., .true., AOBasis, ORBITAL_ORDERING_OPEN_MOLCAS)
+            !            call orca_read_symmetric_matrix(S_extao, SBinaryFilePath)
+!            S_extao_2 = S_sao
+
+            call msg("--- Auto2e overlap matrix (Auto2e-Orca) ---")
+            call geprn(S_extao_2)
+            call msg("--- end of Auto2e overlap matrix ---")
+
+            ! call msg("--- Orca overlap matrix ---")
+            ! call geprn(S_extao)
+            ! call msg("--- end of Orca overlap matrix ---")
+      end subroutine test_molcas
 
 
       subroutine orca_read_symmetric_matrix(S, BinaryFilePath)
