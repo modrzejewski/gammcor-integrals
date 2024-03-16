@@ -30,17 +30,6 @@ module arithmetic
       !
       integer, parameter :: I64 = selected_int_kind(18)
       integer(I64), parameter :: I64_ZERO = 0_I64
-
-      real(F64), parameter :: pi = 3.141592653589793_F64
-      real(F64), parameter :: ZERO = 0.0_F64
-      real(F64), parameter :: ONE = 1.0_F64
-      real(F64), parameter :: TWO = 2.0_F64
-      real(F64), parameter :: three = 3.0_F64
-      real(F64), parameter :: four = 4.0_F64
-      real(F64), parameter :: five = 5.0_F64
-      real(F64), parameter :: TEN = 10.0_F64
-      real(F64), parameter :: FRAC12 = one / two
-      
       ! -------------------------------------------------------------------
       ! FIXED-WIDTH PRECISION-PRESERVING FORMATS OF FLOATING POINT NUMBERS
       !              ES{FXY_ES_W}.{FXY_ES_D}E{FXY_ES_E}

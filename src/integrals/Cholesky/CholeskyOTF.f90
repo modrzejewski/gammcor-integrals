@@ -26,7 +26,7 @@ module CholeskyOTF
       use io
       use Auto2e
       use linalg
-      use clockMM
+      use clock
       use string
       use sort
       use basis_sets

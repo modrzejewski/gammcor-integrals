@@ -1,1 +1,1 @@
-ifort -coarray=single -O3 -no-prec-div -qopenmp -qmkl -assume byterecl -I{Include} -o
+ifx -coarray=single -O3 -no-prec-div -qopenmp -qmkl -assume byterecl -I{Include} -o

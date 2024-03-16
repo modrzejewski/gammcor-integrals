@@ -31,6 +31,7 @@
 !
 module auto2e_WMatrix_part1
 use arithmetic
+use math_constants
 use boys
 use auto2e_Hermite
 use auto2e_BraTransform

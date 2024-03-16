@@ -1,8 +1,9 @@
 module boys
+      use math_constants
       use arithmetic
       use chebinterp
       use display
-      use clockMM
+      use clock
       ! ---------------------------------------------------------
       !                      THE BOYS FUNCTION
       ! ---------------------------------------------------------
@@ -512,4 +513,71 @@ contains
                   fmarray(7) = f
             end if
       end subroutine f6
+
+
+      subroutine boys_unittest()
+            integer, parameter :: m_max = 24
+            real(F64), parameter :: dx = 0.0005_F64
+            real(F64) :: x
+            integer :: k, l
+            real(F64) :: max_error, max_error_x
+            real(F64) :: e, fm_ref
+            real(F64), dimension(m_max+1) :: fmarray_m
+            type(tclock) :: timer
+            real(F64) :: t
+
+            call boys_init(m_max)
+            max_error = ZERO
+            max_error_x = ZERO
+            
+            do k = 1, nint(50.0_F64 / dx)
+                  x = real((k - 1), F64) * dx
+
+                  call fm(m_max, x, fmarray_m)
+
+                  do l = 1, m_max + 1
+                        fm_ref = fm_reference(l-1, x)
+                        e = abs(fmarray_m(l) - fm_ref) / fm_ref
+                        if (e > max_error) then 
+                              max_error = e
+                              max_error_x = x
+                        end if
+                  end do
+            end do
+
+            do k = 1, NINTERVALS
+                  x = real((k - 1), F64) * DELTAX
+
+                  call fm(m_max, x, fmarray_m)
+                  do l = 1, m_max + 1
+                        fm_ref = fm_reference(l-1, x)
+                        e = abs(fmarray_m(l) - fm_ref) / fm_ref
+                        if (e > max_error) then 
+                              max_error = e
+                              max_error_x = x
+                        end if
+                  end do
+            end do
+
+            call clock_start(timer)
+
+            !$omp parallel private(x, fmarray_m)
+            !$omp do schedule(guided)
+            do k = 1, 10**9
+                  x = real(modulo(k, NINTERVALS), F64) * DELTAX
+                  call fm(m_max, x, fmarray_m)
+            end do 
+            !$omp end do nowait
+            !$omp end parallel
+
+            t = clock_readwall(timer)
+
+            call msg("TESTING COMPUTATION OF THE BOYS FUNCTION")
+            call imsg("MAX. ORDER OF F_M(X)", m_max)
+            call dmsg("MAX. UNSIGNED RELATIVE ERROR", max_error, fmt="ES10.3")
+            call dmsg("MAX. ERROR OCCURED AT POINT X =", max_error_x, fmt="F10.6")
+            call dmsg("PERFORMANCE MEASURE [s]", t, fmt="ES10.3")
+
+            call boys_free()
+      end subroutine boys_unittest
 end module boys

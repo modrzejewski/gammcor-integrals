@@ -11,10 +11,64 @@ module Cholesky_driver
       use chol_definitions
       use display
       use Auto2eInterface
+      use thc_definitions
+      use TwoStepCholesky_definitions
+      use thc_definitions
+      use THC_Gammcor, only: thc_gammcor_XZ, thc_gammcor_Xga, thc_gammcor_Rkab
       
       implicit none
 
 contains
+
+      subroutine chol_MOVecs_THC(Rkab, CA, a0, a1, CB, b0, b1, BasisSetPath, XYZPath, Accuracy, &
+            SpherAO, ExternalOrdering, SortAngularMomenta, Units)
+
+            real(F64), dimension(:, :), allocatable, intent(out) :: Rkab
+            real(F64), dimension(:, :), intent(in)               :: CA
+            integer, intent(in)                                  :: a0, a1
+            real(F64), dimension(:, :), intent(in)               :: CB
+            integer, intent(in)                                  :: b0, b1
+            character(*), intent(in)                             :: BasisSetPath
+            character(*), intent(in)                             :: XYZPath
+            integer, intent(in)                                  :: Accuracy
+            logical, intent(in)                                  :: SpherAO
+            integer, intent(in)                                  :: ExternalOrdering
+            logical, intent(in)                                  :: SortAngularMomenta
+            integer, intent(in)                                  :: Units
+
+            type(TAOBasis) :: AOBasis
+            type(TSystem) :: System
+            real(F64), dimension(:, :), allocatable :: Xgp, Zgk
+            real(F64), dimension(:, :), allocatable :: Xga, Xgb            
+            integer :: NGridTHC, NCholesky, NA, NB
+            integer :: NAO
+            !
+            ! Read the XYZ coordinates and atom types
+            !
+            call sys_Read_XYZ(System, XYZPath, Units)
+            !
+            ! Read the basis set parameters from an EMSL text file
+            ! (GAMESS-US format, no need for any edits, just download it straight from the website)
+            !
+            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+            if (AOBasis%SpherAO) then
+                  NAO = AOBasis%NAOSpher
+            else
+                  NAO = AOBasis%NAOCart
+            end if
+            NA = a1 - a0 + 1
+            NB = b1 - b0 + 1
+            call thc_gammcor_XZ(Xgp, Zgk, AOBasis, System, Accuracy)
+            NGridTHC = size(Zgk, dim=1)
+            NCholesky = size(Zgk, dim=2)
+            allocate(Xga(NGridTHC, NA))
+            allocate(Xgb(NGridTHC, NB))
+            allocate(Rkab(NCholesky, NA*NB))
+            call thc_gammcor_Xga(Xga, Xgp, CA(:, a0:a1), AOBasis, ExternalOrdering)
+            call thc_gammcor_Xga(Xgb, Xgp, CB(:, b0:b1), AOBasis, ExternalOrdering)
+            call thc_gammcor_Rkab(Rkab, Xga, Xgb, Zgk, Na, Nb, NCholesky, NGridTHC)        
+      end subroutine chol_MOVecs_THC
+      
 
       subroutine chol_MOVecs_v2(Rkab, CA, a0, a1, CB, b0, b1, MaxBufferDimMB, OnTheFly, &
             RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
@@ -182,7 +236,7 @@ contains
                   error stop
             end if
             !
-            ! Change the ordering of angular functions from Molpro
+            ! Change the ordering of angular functions from the external convention
             ! to the internal ordering of the Auto2e module.
             ! The ordering of whole shells is assumed to be already
             ! the same as in the external program.

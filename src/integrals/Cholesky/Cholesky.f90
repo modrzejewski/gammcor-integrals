@@ -37,7 +37,7 @@
 module Cholesky
       use arithmetic
       use io
-      use clockMM
+      use clock
       use string
       use linalg
       use sorter_Cholesky

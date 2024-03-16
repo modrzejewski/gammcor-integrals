@@ -4,7 +4,6 @@ module Auto2eInterface
       use Auto2e
       use display
       use string
-!      use OneElectronInts
       use sys_definitions
       use linalg
       use spherh
@@ -462,7 +461,7 @@ contains
 
       subroutine auto2e_interface_ApplyOrcaPhases_Vector(W, AOBasis)
             !
-            ! Change phases of the real combinations of the spherical
+            ! Change phases of the real combinations of spherical
             ! f, g, and h functions to match the Orca convention.
             ! The nonstandard phase for f and g functions, m=+-3 and +-4,
             ! is described in Orca's gto1.cpp file. We guessed that the

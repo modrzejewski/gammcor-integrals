@@ -25,6 +25,7 @@
 !
 module auto2e_eri_gggs
 use arithmetic
+use math_constants
 use auto2e_KetTransfer
 use auto2e_SpherTransf
 use auto2e_WMatrix_part1
