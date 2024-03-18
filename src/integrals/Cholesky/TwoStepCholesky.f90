@@ -420,8 +420,7 @@ contains
             real(F64), dimension(:, :, :), allocatable, intent(inout) :: Rkpq[:]
             type(TChol2Vecs), intent(in)                              :: Chol2Vecs
             type(TAOBasis), intent(in)                                :: AOBasis
-            type(TChol2Params), intent(in)                            :: Chol2Params
-            
+            type(TChol2Params), intent(in)                            :: Chol2Params            
 
             real(F64), dimension(:, :), allocatable :: Wabrs
             integer :: SubsetIdx, X, Y

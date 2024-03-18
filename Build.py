@@ -398,18 +398,15 @@ BatchList.append(["src/Main/linalg.f90",
 BatchList.append(["src/integrals/Cholesky/TwoStepCholesky_Step1.f90",
                   "src/integrals/Cholesky/TwoStepCholesky_Step2.f90"])
 BatchList.append(["src/integrals/Cholesky/TwoStepCholesky.f90"])
-BatchList.append(["src/integrals/Cholesky/Cholesky.f90",
-                  "src/integrals/Cholesky/CholeskyOTF.f90"])
+BatchList.append(["src/integrals/Cholesky/Cholesky.f90"])
 BatchList.append(["src/integrals/OneElectronInts.f90"])
-BatchList.append(["src/Main/CholeskyExchange.f90",
-                  "src/Main/CholeskyCoulomb.f90"])
-BatchList.append(["src/Main/CholeskyFock.f90"])
 BatchList.append(["src/integrals/grid/GridFunctions.f90"])
 BatchList.append(["src/integrals/grid/BeckeGrid.f90"])
 BatchList.append(["src/integrals/THC/TensorHypercontraction.f90"])
 BatchList.append(["src/gammcor-interface/Auto2eInterface.f90"])
-BatchList.append(["src/gammcor-interface/THC_Gammcor.f90"])
-BatchList.append(["src/Main/Cholesky_driver.f90"])
+BatchList.append(["src/gammcor-interface/OneElectronInts_Gammcor.f90"])
+BatchList.append(["src/gammcor-interface/THC_Gammcor.f90",
+                  "src/gammcor-interface/Cholesky_Gammcor.f90"])
 BatchList.append(["src/Main/test.f90"])
 MainProgram = "src/Main/test.f90"
 

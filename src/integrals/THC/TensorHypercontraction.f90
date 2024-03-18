@@ -18,7 +18,7 @@ module TensorHypercontraction
 
 contains
 
-      subroutine thc_Test(Zgk, Xgp, AOBasis)
+      subroutine thc_Test(Zgk, Xgp, AOBasis)            
             real(F64), dimension(:, :), intent(in) :: Zgk
             real(F64), dimension(:, :), intent(in) :: Xgp
             type(TAOBasis), intent(in)             :: AOBasis
@@ -238,6 +238,11 @@ contains
 
             type(TChol2Vecs) :: Chol2Vecs
             real(F64), dimension(1, 1, 1) :: Rkpq
+
+            if (.not. THCParams%THC_QuadraticMemory) then
+                  call msg("Invalid value of QuadraticMemory", MSG_ERROR)
+                  error stop
+            end if
             !
             ! Locate pivots of the Coulomb matrix. This step is required before
             ! generating the Z matrix.
@@ -249,7 +254,7 @@ contains
                   THCGrid%NGridReduced, &
                   THCParams%THC_BeckeGridKind, &  ! parent molecular grid
                   THCParams%QRThresh, &           ! Threshold for rank-revealing QR/Cholesky
-                  THCParams%QRThreshReduced, &    ! threshold for the reduced-size grid
+                  THCParams%QRThreshReduced, &      ! threshold for the reduced-size grid
                   THCParams%THC_BlockDim, &       ! block dimension for the on the fly THC/Cholesky
                   AOBasis, System)
             call thc_Z( &

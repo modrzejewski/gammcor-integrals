@@ -5,7 +5,6 @@ module Auto2eInterface
       use display
       use string
       use sys_definitions
-      use linalg
       use spherh
       
       implicit none
