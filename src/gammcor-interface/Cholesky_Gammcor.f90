@@ -403,7 +403,7 @@ contains
             case (CHOL_ACCURACY_LUDICROUS)
                   Chol2Params%CholeskyTauThresh = 1.0E-7_F64
             case (CHOL_ACCURACY_DEBUG)
-                  Chol2Params%CholeskyTauThresh = 1.0E-8_F64
+                  Chol2Params%CholeskyTauThresh = 1.0E-10_F64
             case default
                   call msg("Invalid accuracy setting", MSG_ERROR)
                   error stop

@@ -29,7 +29,7 @@ program test
       integer :: Units
       logical :: SortAngularMomenta
 
-      Example = "Dalton/water-cc-pVTZ"
+      Example = "Dalton/water-cc-pVQZ"
       RawIntegralsPath = "./examples/" // Example // "/results/AOTWOINT"
       BasisSetPath = "./examples/" // Example // "/basis.txt"
       XYZPath = "./examples/" // Example // "/molecule.xyz"

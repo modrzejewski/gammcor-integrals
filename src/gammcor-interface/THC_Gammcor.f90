@@ -138,8 +138,8 @@ contains
                   Chol2Params%CholeskyTauThresh = 1.0E-7_F64
                   THCParams%QRThresh = 1.0E-6_F64
             case (THC_ACCURACY_DEBUG)
-                  Chol2Params%CholeskyTauThresh = 1.0E-8_F64
-                  THCParams%QRThresh = 1.0E-6_F64
+                  Chol2Params%CholeskyTauThresh = 1.0E-10_F64
+                  THCParams%QRThresh = 1.0E-7_F64
             case default
                   call msg("Invalid THC accuracy value", MSG_ERROR)
                   error stop
