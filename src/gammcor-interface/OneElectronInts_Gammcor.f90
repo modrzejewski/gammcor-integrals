@@ -120,4 +120,44 @@ contains
             end associate
             call boys_free()
       end subroutine ints1e_gammcor_H0_mo
+
+
+      subroutine ints1e_gammcor_H0_extao(H0_extao, AOBasis, System, ExternalOrdering)            
+            real(F64), dimension(:, :), intent(out) :: H0_extao
+            type(TAOBasis), intent(in)              :: AOBasis
+            type(TSystem), intent(in)               :: System
+            integer, intent(in)                     :: ExternalOrdering
+
+            real(F64), dimension(:, :), allocatable :: H0_ao
+            integer :: NAO
+            logical :: FromExternalAO, TwoIndexTransf
+
+            call auto2e_init()
+            call boys_init(4*AUTO2E_MAXL)
+            associate (NAOCart => AOBasis%NAOCart, &
+                  NAOSpher => AOBasis%NAOSpher, &
+                  SpherAO => AOBasis%SpherAO)
+
+                  NAO = size(H0_extao, dim=1)
+                  if ((SpherAO .and. NAO /= NAOSpher) .or. (.not.SpherAO .and. NAO /= NAOCart)) then
+                        call msg("Invalid dimension of matrix H0_extao")
+                        error stop
+                  end if
+                  !
+                  ! Bare nuclei hamiltonian (atomic orbital basis, auto2e ordering)
+                  !
+                  allocate(H0_ao(NAO, NAO))
+                  call ints1e_gammcor_H0(H0_ao, AOBasis, System)
+                  !
+                  ! MO coefficients in AO basis (auto2e ordering)
+                  !
+                  FromExternalAO = .false.
+                  TwoIndexTransf = .true.
+                  call auto2e_interface_AngFuncTransf(H0_extao, H0_ao, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
+                  if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
+                        call auto2e_interface_ApplyOrcaPhases_Matrix(H0_extao, AOBasis, TwoIndexTransf)
+                  end if
+            end associate
+            call boys_free()
+      end subroutine ints1e_gammcor_H0_extao
 end module OneElectronInts_Gammcor
