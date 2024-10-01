@@ -108,7 +108,7 @@ contains
             allocate(S_extao_2(NAO, NAO))
 
             call ints1e_OverlapMatrix(S_cao, AOBasis)            
-            call linalg_smfill(S_cao)
+            call real_smfill(S_cao)
 
             allocate(TransfWork(NAOSpher*NAOCart))
             call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
@@ -167,7 +167,7 @@ contains
             allocate(S_extao_2(NAO, NAO))
 
             call ints1e_OverlapMatrix(S_cao, AOBasis)            
-            call linalg_smfill(S_cao)
+            call real_smfill(S_cao)
 
             allocate(TransfWork(NAOSpher*NAOCart))
             call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
@@ -382,9 +382,9 @@ contains
             call ints1e_Coulomb(V_cao, AOBasis, System)
             call ints1e_Kinetic(T_cao, AOBasis)
             
-            call linalg_smfill(S_cao)
-            call linalg_smfill(T_cao)
-            call linalg_smfill(V_cao)
+            call real_smfill(S_cao)
+            call real_smfill(T_cao)
+            call real_smfill(V_cao)
             
             allocate(TransfWork(NAOSpher*NAOCart))
             call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
