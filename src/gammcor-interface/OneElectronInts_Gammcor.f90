@@ -122,7 +122,7 @@ contains
       end subroutine ints1e_gammcor_H0_mo
 
 
-      subroutine ints1e_gammcor_H0_extao(H0_extao, AOBasis, System, ExternalOrdering)            
+      subroutine ints1e_gammcor_H0_extao(H0_extao, AOBasis, System, ExternalOrdering)          
             real(F64), dimension(:, :), intent(out) :: H0_extao
             type(TAOBasis), intent(in)              :: AOBasis
             type(TSystem), intent(in)               :: System

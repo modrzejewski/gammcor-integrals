@@ -67,5 +67,15 @@ module thc_definitions
             real(F64) :: QRThreshReduced = 1.0E-3_F64
             integer   :: THC_BlockDim = 500
             logical   :: THC_QuadraticMemory = .false.
+            !
+            ! PhiSquaredThresh controls the removal of THC grid points where
+            ! atomic orbitals have small values. If for all k |Psi(rk)|**2
+            ! <= PhiSquaredThresh, the kth point is discarded. The SCF and
+            ! post-SCF energies depend on this threshold very weakly. However,
+            ! a too small PhiSquaredThresh results in poor SCF convergence.
+            ! In the most difficult case I have found, trimers of benzene
+            ! in aug-cc-pVDZ basis require PhiSquaredThresh=1.0E-11 to converge.
+            !
+            real(F64) :: PhiSquaredThresh = 1.0E-11_F64
       end type TTHCParams
 end module thc_definitions

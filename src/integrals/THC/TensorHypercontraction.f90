@@ -253,8 +253,9 @@ contains
                   THCGrid%NGrid, &
                   THCGrid%NGridReduced, &
                   THCParams%THC_BeckeGridKind, &  ! parent molecular grid
+                  THCParams%PhiSquaredThresh, &   ! threshold for small values of atomic orbitals
                   THCParams%QRThresh, &           ! Threshold for rank-revealing QR/Cholesky
-                  THCParams%QRThreshReduced, &      ! threshold for the reduced-size grid
+                  THCParams%QRThreshReduced, &    ! threshold for the reduced-size grid
                   THCParams%THC_BlockDim, &       ! block dimension for the on the fly THC/Cholesky
                   AOBasis, System)
             call thc_Z( &
@@ -296,8 +297,8 @@ contains
       end subroutine thc_ReduceGrid
       
 
-      subroutine thc_Grid(Xgp, NGrid, NGridReduced, BeckeGridKind, QRThresh, QRThreshReduced, &
-            BlockDim, AOBasis, System)
+      subroutine thc_Grid(Xgp, NGrid, NGridReduced, BeckeGridKind, PhiSquaredThresh, &
+            QRThresh, QRThreshReduced, BlockDim, AOBasis, System)
             !
             ! Cholesky/rank-revealing QR pruned molecular grid for the THC decomposition
             !
@@ -338,6 +339,7 @@ contains
             integer, intent(out)                                 :: NGrid
             integer, intent(out)                                 :: NGridReduced
             integer, intent(in)                                  :: BeckeGridKind
+            real(F64), intent(in)                                :: PhiSquaredThresh
             real(F64), intent(in)                                :: QRThresh
             real(F64), intent(in)                                :: QRThreshReduced
             integer, intent(in)                                  :: BlockDim
@@ -365,7 +367,8 @@ contains
             else
                   NAO = AOBasis%NAOCart
             end if
-            call becke_MolecularGrid(X, Y, Z, W, NGrid, BeckeGridKind, System, AOBasis)
+            call becke_MolecularGrid(X, Y, Z, W, NGrid, BeckeGridKind, &
+                  System, AOBasis, PhiSquaredThresh)
             deallocate(W)
             !
             ! Molecular grid pruning by rank-revealing Cholesky decomposition.
@@ -597,7 +600,7 @@ contains
       subroutine thc_normalize_Xgp(Xgp)
             !
             ! Normalize collocation matrices as in Ref. 1. The sum of squares
-            ! can't be zero because all grid points were screened out during
+            ! can't be zero because all zero grid points were screened out during
             ! Becke grid generation:
             !
             ! Rg: Max|PhiP(Rg)|**2>=PhiSquaredThresh
@@ -611,20 +614,26 @@ contains
             real(F64), dimension(:, :), intent(inout) :: Xgp
             
             integer :: NAO, NGrid
-            real(F64) :: p
+            integer :: p, g
             real(F64), dimension(:), allocatable :: N
             
             NGrid = size(Xgp, dim=1)
             NAO = size(Xgp, dim=2)
             allocate(N(NGrid))
-            N = ZERO
-            do p = 1, NAO
-                  N = N + Xgp(:, p)**2
+            !
+            ! Numerically stable evaluation of L2 norm
+            !
+            N = norm2(Xgp, dim=2)
+            !$omp parallel do private(g)
+            do g = 1, NGrid
+                  N(g) = ONE / N(g)
             end do
-            N = ONE / Sqrt(N)
+            !$omp end parallel do
+            !$omp parallel do private(p)
             do p = 1, NAO
-                  Xgp(:, p) = N * Xgp(:, p)
+                  Xgp(:, p) = N(:) * Xgp(:, p)
             end do
+            !$omp end parallel do
       end subroutine thc_normalize_Xgp
 
 
@@ -854,7 +863,8 @@ contains
                         PivotThreshReduced = -ONE
                   end if
                   call msg("Cholesky absolute pivot threshold Eps**2=" // str(PivotThresh,d=1))
-                  if (QRThreshReduced > ZERO) call msg("Cholesky absolute pivot threshold (reduced grid) Eps**2=" // str(PivotThreshReduced,d=1))
+                  if (QRThreshReduced > ZERO) call msg("Cholesky absolute pivot threshold (reduced grid) Eps**2=" &
+                        // str(PivotThreshReduced,d=1))
                   MaxIters = NCandidates / BlockDim
                   if (modulo(NCandidates, BlockDim) > 0) MaxIters = MaxIters + 1
                   allocate(XhJ(NCandidates))
@@ -915,7 +925,7 @@ contains
                   end do
                   call midrule()
                   if (Converged) then
-                        call msg("Cholesky decomposition converged with " // str(NPivots) // " pivots")
+                        call msg("Rank-revealing decomposition converged with " // str(NPivots) // " pivots")
                         call msg("Average " // str(NPivots/AOBasis%NAtoms) // " points per atom")
                         call msg("NGridTHC/NAO=" // str(real(NPivots,F64)/NAO, d=1))
                         if (QRThreshReduced > ZERO) then

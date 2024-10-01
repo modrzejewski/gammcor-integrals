@@ -95,6 +95,26 @@ contains
       end subroutine thc_gammcor_Rkab_2
 
 
+      subroutine thc_gammcor_Rkab_Batch_a_Fixed_b(Rkab, XXga, Xga, Xgb, Zgk, Na, NCholesky, NGridTHC)
+            integer, intent(in)                                   :: Na
+            integer, intent(in)                                   :: NCholesky, NGridTHC
+            real(F64), dimension(NCholesky, Na), intent(out)      :: Rkab
+            real(F64), dimension(NGridTHC, Na), intent(out)       :: XXga
+            real(F64), dimension(NGridTHC, Na), intent(in)        :: Xga
+            real(F64), dimension(NGridTHC), intent(in)            :: Xgb
+            real(F64), dimension(NGridTHC, NCholesky), intent(in) :: Zgk
+
+            integer :: a
+
+            !$omp parallel do private(a)
+            do a = 1, Na
+                  XXga(:, a) = Xga(:, a) * Xgb(:)
+            end do
+            !$omp end parallel do
+            call real_aTb(Rkab, Zgk, XXga)
+      end subroutine thc_gammcor_Rkab_Batch_a_Fixed_b
+
+
       subroutine thc_gammcor_Xga(Xga, Xgp, C_extao, AOBasis, ExternalOrdering)
             real(F64), dimension(:, :), intent(out) :: Xga
             real(F64), dimension(:, :), intent(in)  :: Xgp
@@ -129,17 +149,17 @@ contains
             THCParams%THC_QuadraticMemory = .true.
             select case (Accuracy)
             case (THC_ACCURACY_DEFAULT)
-                  Chol2Params%CholeskyTauThresh = 1.0E-7_F64
-                  THCParams%QRThresh = 1.0E-4_F64
+                  Chol2Params%CholeskyTauThresh = 1.0E-5_F64
+                  THCParams%QRThresh = 1.0E-3_F64
             case (THC_ACCURACY_TIGHT)
-                  Chol2Params%CholeskyTauThresh = 1.0E-7_F64
-                  THCParams%QRThresh = 1.0E-5_F64
+                  Chol2Params%CholeskyTauThresh = 1.0E-6_F64
+                  THCParams%QRThresh = 1.0E-4_F64
             case (THC_ACCURACY_LUDICROUS)
                   Chol2Params%CholeskyTauThresh = 1.0E-7_F64
-                  THCParams%QRThresh = 1.0E-6_F64
+                  THCParams%QRThresh = 1.0E-5_F64
             case (THC_ACCURACY_DEBUG)
                   Chol2Params%CholeskyTauThresh = 1.0E-10_F64
-                  THCParams%QRThresh = 1.0E-7_F64
+                  THCParams%QRThresh = 1.0E-6_F64
             case default
                   call msg("Invalid THC accuracy value", MSG_ERROR)
                   error stop

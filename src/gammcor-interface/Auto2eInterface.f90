@@ -14,6 +14,7 @@ module Auto2eInterface
       integer, parameter :: ORBITAL_ORDERING_ORCA = 2
       integer, parameter :: ORBITAL_ORDERING_DALTON = 3
       integer, parameter :: ORBITAL_ORDERING_OPEN_MOLCAS = 4
+      integer, parameter :: ORBITAL_ORDERING_PYSCF = 5
 
       integer, parameter, private :: Auto2e_MaxAngFuncSpher = 2 * Auto2e_MaxL + 1
       integer, parameter, private :: Auto2e_MaxAngFuncCart = ((Auto2e_MaxL+1)*(Auto2e_MaxL+2))/2
@@ -79,6 +80,25 @@ module Auto2eInterface
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_F = [(k,k=-3,3), (-4,k=1,4)] + 4
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_G = [(k,k=-4,4), (-5,k=1,2)] + 5
       integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_H = [(k,k=-5,5)] + 6
+      ! -------------------------------------------------------------------------------------------------------------
+      ! Ordering of solid harmonics in PySCF
+      ! -------------------------------------------------------------------------------------------------------------
+      !                                                                    s
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_S = [0, (-1, k=1,10)] + 1
+      !
+      ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
+      ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
+      ! is the same as in Molpro. (Otherwise, the pz orbital corresponding to m=0 would be stored in
+      ! the second element of the array instead of the third.)
+      !                                                                   px py pz
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_P = [1, 2, 3, (0,k=1,8)]
+      !
+      ! Higher-order solid harmonics in Dalton are ordered from -L to L
+      !
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_D = [(k,k=-2,2), (-3,k=1,6)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_F = [(k,k=-3,3), (-4,k=1,4)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_G = [(k,k=-4,4), (-5,k=1,2)] + 5
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_H = [(k,k=-5,5)] + 6
       !
       ! ------------------------------------------------------------------------------------------------------------
       ! Ordering of solid harmonics in Open Molcas
@@ -329,9 +349,7 @@ contains
             integer, intent(in)                :: ExternalOrdering
 
             integer :: k
-            !
-            ! Ordering of real solid harmonics in Molpro
-            !
+
             integer, parameter :: Auto2e_MaxAngFuncSpher = 2 * Auto2e_MaxL + 1
             integer, parameter :: Auto2e_MaxAngFuncCart = ((Auto2e_MaxL+1)*(Auto2e_MaxL+2))/2
 
@@ -348,6 +366,9 @@ contains
             integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Dalton_AngFuncMap &
                   = reshape([DALTON_S, DALTON_P, DALTON_D,  DALTON_F, DALTON_G, DALTON_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
 
+            integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: PySCF_AngFuncMap &
+                  = reshape([PYSCF_S, PYSCF_P, PYSCF_D,  PYSCF_F, PYSCF_G, PYSCF_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+            
             integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Open_Molcas_AngFuncMap &
                   = reshape([OPEN_MOLCAS_S, OPEN_MOLCAS_P, OPEN_MOLCAS_D, OPEN_MOLCAS_F, OPEN_MOLCAS_G, OPEN_MOLCAS_H], &
                   [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
