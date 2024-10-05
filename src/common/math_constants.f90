@@ -3,26 +3,26 @@ module math_constants
 
       implicit none
 
-      real(F64), parameter :: pi = 3.141592653589793d+0
+      real(F64), parameter :: pi = 3.141592653589793_F64
       real(F64), parameter :: pi32 = sqrt(pi**3)
       real(F64), parameter :: pi34 = sqrt(pi32)
       real(F64), parameter :: pi52 = sqrt(pi**5)
       real(F64), parameter :: pi12 = sqrt(pi)
-      real(F64), parameter :: pi13 = pi**(1.d+0 / 3.d+0)
-      real(F64), parameter :: pi23 = pi**(2.d+0 / 3.d+0)
+      real(F64), parameter :: pi13 = pi**(1.0_F64 / 3.0_F64)
+      real(F64), parameter :: pi23 = pi**(2.0_F64 / 3.0_F64)
       real(F64), parameter :: EULER_CONSTANT = 0.57721566490153286_F64
 
-      real(F64), parameter :: zero = 0.d+0
-      real(F64), parameter :: one = 1.d+0
-      real(F64), parameter :: two = 2.d+0
-      real(F64), parameter :: three = 3.d+0
-      real(F64), parameter :: four = 4.d+0
-      real(F64), parameter :: five = 5.d+0
-      real(F64), parameter :: six = 6.d+0
-      real(F64), parameter :: seven = 7.d+0
-      real(F64), parameter :: eight = 8.d+0
-      real(F64), parameter :: nine = 9.d+0
-      real(F64), parameter :: ten = 10.d+0
+      real(F64), parameter :: zero = 0.0_F64
+      real(F64), parameter :: one = 1.0_F64
+      real(F64), parameter :: two = 2.0_F64
+      real(F64), parameter :: three = 3.0_F64
+      real(F64), parameter :: four = 4.0_F64
+      real(F64), parameter :: five = 5.0_F64
+      real(F64), parameter :: six = 6.0_F64
+      real(F64), parameter :: seven = 7.0_F64
+      real(F64), parameter :: eight = 8.0_F64
+      real(F64), parameter :: nine = 9.0_F64
+      real(F64), parameter :: ten = 10.0_F64
       real(F64), parameter :: ELEVEN = 11.0_F64
       real(F64), parameter :: TWELVE = 12.0_F64
       real(F64), parameter :: FIFTEEN = 15.0_F64
@@ -45,15 +45,15 @@ module math_constants
       !
       ! Planck constant in J s. Source: CODATA 2010
       !
-      real(F64), parameter :: planck = 6.62606957d-34
+      real(F64), parameter :: planck = 6.62606957E-34_F64
       !
       ! Planck constant over 2 pi in J s. Source: CODATA 2010
       !
-      real(F64), parameter :: planckbar = 1.054571726d-34
+      real(F64), parameter :: planckbar = 1.054571726E-34_F64
       !
       ! Electric constant \epsilon_0 in F m^{-1}. Source: CODATA 2010
       !
-      real(F64), parameter :: eps_0 = 8.854187817d-12
+      real(F64), parameter :: eps_0 = 8.854187817E-12_F64
       !
       ! Speed of light in vacuum in m s^{-1}. Source: CODATA 2010
       !
@@ -61,11 +61,11 @@ module math_constants
       !
       ! Elementary charge in C. Source: CODATA 2010
       !
-      real(F64), parameter :: e_charge = 1.602176565d-19
+      real(F64), parameter :: e_charge = 1.602176565E-19_F64
       !
       ! Electron mass in kg. Source: CODATA 2010
       !
-      real(F64), parameter :: me = 9.10938291d-31
+      real(F64), parameter :: me = 9.10938291E-31_F64
       !
       ! Atomic unit of velocity a_0 E_h / hbar in m s^{-1}.
       ! Source: CODATA 2010.

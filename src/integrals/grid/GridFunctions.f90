@@ -2,7 +2,7 @@ module GridFunctions
       use arithmetic
       use basis_sets
       use Auto2e_SpherTransf
-      use linalg
+      use real_linalg
 
       implicit none
 
@@ -27,10 +27,10 @@ contains
             NMO = size(C, dim=2)
             allocate(W(NPoints, NMO))
             allocate(Wx(NPoints, NMO))
-            call linalg_ab(W, Phi(:, :, 1), C)
+            call real_ab(W, Phi(:, :, 1), C)
             call multiply_W_W(Rho(:, 1), W, W, OccNumbers)
             do i = 2, 4
-                  call linalg_ab(Wx, Phi(:, :, i), C)
+                  call real_ab(Wx, Phi(:, :, i), C)
                   call multiply_W_W(Rho(:, i), W, Wx, OccNumbers)
                   Rho(:, i) = TWO * Rho(:, i)
             end do
@@ -147,7 +147,7 @@ contains
             integer, intent(in)                           :: NMO
             integer, intent(in)                           :: NAO
 
-            call linalg_ab(Xki, Xkp, Cpi)
+            call real_ab(Xki, Xkp, Cpi)
       end subroutine gridfunc_Orbitals_Transform
 
       
@@ -287,39 +287,24 @@ contains
                         NaSpher = NAngFuncSpher(ShellParamsA)
                         if (SpherAO) then
                               p0 = ShellLocSpher(ShA)
-                              call gridfunc_Orbitals_Grad_Shell(Phi, PhiSpher, PhiCart, &
-                                    Xg, Yg, Zg, NPoints, &
-                                    NormFactorsSpher(:, ShellParamsA), &
-                                    NormFactorsCart(:, ShellParamsA), &
-                                    CntrCoeffs(:, ShellParamsA), &
-                                    Exponents(:, ShellParamsA), &
-                                    NPrimitives(ShellParamsA), &
-                                    La, &
-                                    AtomCoords(:, AtomA), &
-                                    CartPolyX(:, La), &
-                                    CartPolyY(:, La), &
-                                    CartPolyZ(:, La), &
-                                    NaSpher, &
-                                    NaCart, &
-                                    SpherAO, p0)
                         else
                               p0 = ShellLocCart(ShA)
-                              call gridfunc_Orbitals_Grad_Shell(Phi, PhiSpher, PhiCart, &
-                                    Xg, Yg, Zg, NPoints, &
-                                    NormFactorsSpher(:, ShellParamsA), &
-                                    NormFactorsCart(:, ShellParamsA), &
-                                    CntrCoeffs(:, ShellParamsA), &
-                                    Exponents(:, ShellParamsA), &
-                                    NPrimitives(ShellParamsA), &
-                                    La, &
-                                    AtomCoords(:, AtomA), &
-                                    CartPolyX(:, La), &
-                                    CartPolyY(:, La), &
-                                    CartPolyZ(:, La), &
-                                    NaSpher, &
-                                    NaCart, &
-                                    SpherAO, p0)
                         end if
+                        call gridfunc_Orbitals_Grad_Shell(Phi, PhiSpher, PhiCart, &
+                              Xg, Yg, Zg, NPoints, &
+                              NormFactorsSpher(:, ShellParamsA), &
+                              NormFactorsCart(:, ShellParamsA), &
+                              CntrCoeffs(:, ShellParamsA), &
+                              Exponents(:, ShellParamsA), &
+                              NPrimitives(ShellParamsA), &
+                              La, &
+                              AtomCoords(:, AtomA), &
+                              CartPolyX(:, La), &
+                              CartPolyY(:, La), &
+                              CartPolyZ(:, La), &
+                              NaSpher, &
+                              NaCart, &
+                              SpherAO, p0)
                   end do
             end associate
       end subroutine gridfunc_Orbitals_Grad
@@ -513,6 +498,5 @@ contains
                         end do
                   end if
             end do
-            if (.not. SpherAO) PhiSpher = ZERO
       end subroutine gridfunc_Orbitals_Grad_Shell
 end module GridFunctions

@@ -77,13 +77,18 @@ def remove_files(RelSrcPath):
 # in n-th batch is changed, all files in batches n+1, n+2, ... are recompiled.
 #
 BatchList = []
-BatchList.append(["src/Main/arithmetic.f90"])
-BatchList.append(["src/Main/clockMM.f90"])
-BatchList.append(["src/Main/display.f90"])
-BatchList.append(["src/Main/chebinterp.f90"])
-BatchList.append(["src/Main/boys.f90"])
+BatchList.append(["src/common/arithmetic.f90"])
+BatchList.append(["src/common/math_constants.f90"])
+BatchList.append(["src/common/string.f90"])
+BatchList.append(["src/common/clock.f90"])
+BatchList.append(["src/common/display.f90"])
+BatchList.append(["src/common/io.f90",
+                  "src/integrals/spherh.f90"])
+BatchList.append(["src/integrals/chebinterp.f90"])
+BatchList.append(["src/integrals/boys.f90"])
 BatchList.append(["src/integrals/grid/grid_definitions.f90",
                   "src/integrals/grid/LebedevGrid.f90"])
+BatchList.append(["src/integrals/THC/thc_definitions.f90"])
 BatchList.append(["src/integrals/Auto2e/src/auto2e_BraTransform.f90", 
 "src/integrals/Auto2e/src/auto2e_Hermite.f90", 
 "src/integrals/Auto2e/src/auto2e_KetTransfer.f90", 
@@ -380,27 +385,28 @@ BatchList.append(["src/integrals/Auto2e/src/auto2e_eri_dddd.f90",
 "src/integrals/Auto2e/src/auto2e_eri_psss.f90", 
 "src/integrals/Auto2e/src/auto2e_eri_ssss.f90"])
 BatchList.append(["src/integrals/Auto2e/src/auto2e.f90"])
-BatchList.append(["src/Main/string.f90",
-                  "src/Main/io.f90",
-                  "src/Main/spherh.f90"])
-BatchList.append(["src/Main/sphergto.f90",
-                  "src/Main/periodic.f90",
-                  "src/Main/sort.f90"])
-BatchList.append(["src/Main/sys_definitions.f90",
-                  "src/Main/chol_definitions.f90"])
-BatchList.append(["src/Main/basis_sets.f90"])
-BatchList.append(["src/Main/sorter_Cholesky.f90"])
-BatchList.append(["src/Main/linalg.f90"])
-BatchList.append(["src/Main/Cholesky.f90",
-                  "src/Main/CholeskyOTF.f90"])
-BatchList.append(["src/Main/OneElectronInts.f90"])
-BatchList.append(["src/Main/CholeskyExchange.f90",
-                  "src/Main/CholeskyCoulomb.f90"])
-BatchList.append(["src/Main/CholeskyFock.f90"])
+BatchList.append(["src/integrals/sphergto.f90",
+                  "src/common/periodic.f90",
+                  "src/common/sort.f90"])
+BatchList.append(["src/common/sys_definitions.f90",
+                  "src/integrals/Cholesky/chol_definitions.f90",
+                  "src/integrals/Cholesky/TwoStepCholesky_definitions.f90"])
+BatchList.append(["src/integrals/basis_sets.f90"])
+BatchList.append(["src/integrals/Cholesky/sorter_Cholesky.f90"])
+BatchList.append(["src/Main/linalg.f90",
+                  "src/linear-algebra/real_linalg.f90"])
+BatchList.append(["src/integrals/Cholesky/TwoStepCholesky_Step1.f90",
+                  "src/integrals/Cholesky/TwoStepCholesky_Step2.f90"])
+BatchList.append(["src/integrals/Cholesky/TwoStepCholesky.f90"])
+BatchList.append(["src/integrals/Cholesky/Cholesky.f90"])
+BatchList.append(["src/integrals/OneElectronInts.f90"])
 BatchList.append(["src/integrals/grid/GridFunctions.f90"])
 BatchList.append(["src/integrals/grid/BeckeGrid.f90"])
-BatchList.append(["src/Main/Auto2eInterface.f90"])
-BatchList.append(["src/Main/Cholesky_driver.f90"])
+BatchList.append(["src/integrals/THC/TensorHypercontraction.f90"])
+BatchList.append(["src/gammcor-interface/Auto2eInterface.f90"])
+BatchList.append(["src/gammcor-interface/OneElectronInts_Gammcor.f90"])
+BatchList.append(["src/gammcor-interface/THC_Gammcor.f90",
+                  "src/gammcor-interface/Cholesky_Gammcor.f90"])
 BatchList.append(["src/Main/test.f90"])
 MainProgram = "src/Main/test.f90"
 

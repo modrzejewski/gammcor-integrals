@@ -25,6 +25,7 @@
 !
 module auto2e_eri_hhfp
 use arithmetic
+use math_constants
 use auto2e_KetTransfer
 use auto2e_SpherTransf
 use auto2e_WMatrix_part1
@@ -372,7 +373,7 @@ end do
 end do
 end subroutine auto2e_Normalize_Spher_5_5_3_1_DCBA
 
-subroutine auto2e_frontend_5_5_1_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_5_5_3_1(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -384,12 +385,12 @@ real(F64), intent(in) :: Kappa
 real(F64), dimension(13230) :: H
 call auto2e_eri_5_5_3_1(H, Ra, CntrA, ExpA, NprimA, &
    Rb, CntrB, ExpB, NprimB, &
-   Rd, CntrD, ExpD, NprimD, &
-   Rc, CntrC, ExpC, NprimC, Kappa)
-call auto2e_Normalize_5_5_3_1_CDBA(G, H, NormA, NormB, NormD, NormC)
-end subroutine auto2e_frontend_5_5_1_3
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_5_5_3_1_DCBA(G, H, NormA, NormB, NormC, NormD)
+end subroutine auto2e_frontend_5_5_3_1
 
-subroutine auto2e_frontend_Spher_5_5_1_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_Spher_5_5_3_1(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -401,10 +402,10 @@ real(F64), intent(in) :: Kappa
 real(F64), dimension(2541) :: H
 call auto2e_eri_Spher_5_5_3_1(H, Ra, CntrA, ExpA, NprimA, &
    Rb, CntrB, ExpB, NprimB, &
-   Rd, CntrD, ExpD, NprimD, &
-   Rc, CntrC, ExpC, NprimC, Kappa)
-call auto2e_Normalize_Spher_5_5_3_1_CDBA(G, H, NormA, NormB, NormD, NormC)
-end subroutine auto2e_frontend_Spher_5_5_1_3
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_Spher_5_5_3_1_DCBA(G, H, NormA, NormB, NormC, NormD)
+end subroutine auto2e_frontend_Spher_5_5_3_1
 
 subroutine auto2e_frontend_3_1_5_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
@@ -440,7 +441,7 @@ call auto2e_eri_Spher_5_5_3_1(H, Rc, CntrC, ExpC, NprimC, &
 call auto2e_Normalize_Spher_5_5_3_1_BADC(G, H, NormC, NormD, NormA, NormB)
 end subroutine auto2e_frontend_Spher_3_1_5_5
 
-subroutine auto2e_frontend_5_5_3_1(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_5_5_1_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -452,12 +453,12 @@ real(F64), intent(in) :: Kappa
 real(F64), dimension(13230) :: H
 call auto2e_eri_5_5_3_1(H, Ra, CntrA, ExpA, NprimA, &
    Rb, CntrB, ExpB, NprimB, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_5_5_3_1_DCBA(G, H, NormA, NormB, NormC, NormD)
-end subroutine auto2e_frontend_5_5_3_1
+   Rd, CntrD, ExpD, NprimD, &
+   Rc, CntrC, ExpC, NprimC, Kappa)
+call auto2e_Normalize_5_5_3_1_CDBA(G, H, NormA, NormB, NormD, NormC)
+end subroutine auto2e_frontend_5_5_1_3
 
-subroutine auto2e_frontend_Spher_5_5_3_1(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_Spher_5_5_1_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -469,10 +470,10 @@ real(F64), intent(in) :: Kappa
 real(F64), dimension(2541) :: H
 call auto2e_eri_Spher_5_5_3_1(H, Ra, CntrA, ExpA, NprimA, &
    Rb, CntrB, ExpB, NprimB, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_Spher_5_5_3_1_DCBA(G, H, NormA, NormB, NormC, NormD)
-end subroutine auto2e_frontend_Spher_5_5_3_1
+   Rd, CntrD, ExpD, NprimD, &
+   Rc, CntrC, ExpC, NprimC, Kappa)
+call auto2e_Normalize_Spher_5_5_3_1_CDBA(G, H, NormA, NormB, NormD, NormC)
+end subroutine auto2e_frontend_Spher_5_5_1_3
 
 subroutine auto2e_frontend_1_3_5_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &

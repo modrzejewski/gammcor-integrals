@@ -1,4 +1,4 @@
-module clockMM
+module clock
       use arithmetic
       use omp_lib
 
@@ -43,4 +43,4 @@ contains
             wall_end = omp_get_wtime()
             clock_readwall = wall_end - t%wall_start
       end function clock_readwall
-end module clockMM
+end module clock

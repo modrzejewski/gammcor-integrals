@@ -1,13 +1,10 @@
 program test
       use sorter_Cholesky
-      use Cholesky
       use basis_sets
       use sys_definitions
       use chol_definitions
-      use CholeskyOTF, only: chol_CoulombMatrix_OTF, TCholeskyVecsOTF
       use arithmetic
       use display
-      use Cholesky_driver
       use string
       use Auto2e
       use Auto2eInterface
@@ -16,6 +13,10 @@ program test
       use BeckeGrid
       use GridFunctions
       use grid_definitions
+      use real_linalg
+      use Cholesky, only: chol_CoulombMatrix, TCholeskyVecs, chol_Rkab_ExternalBinary, chol_MOTransf_TwoStep
+      use THC_Gammcor, only: thc_gammcor_Rkab
+      use Cholesky_Gammcor, only: TCholeskyVecsOTF, chol_gammcor_Rkab, chol_gammcor_Rkpq
       
       implicit none
 
@@ -28,19 +29,19 @@ program test
       integer :: Units
       logical :: SortAngularMomenta
 
-      Example = "Molcas/water/cc-pVTZ/emsl"
+      Example = "Dalton/water-cc-pVQZ"
       RawIntegralsPath = "./examples/" // Example // "/results/AOTWOINT"
       BasisSetPath = "./examples/" // Example // "/basis.txt"
       XYZPath = "./examples/" // Example // "/molecule.xyz"
       SBinaryFilePath = "./examples/" // Example // "/S.bin"
       NaturalOrbitalsPath = "./examples/" // Example // "/results/CAONO.mol"
       HFOrbitalsPath = "./examples/" // Example // "/results/CAOMO.bin"
-      ! AOSource = 2 ! Molpro binary file
+      !AOSource = 2 ! Molpro binary file
       AOSource = 1 ! Dalton binary file
       SpherAO = .true.
-      Accuracy = CHOL_ACCURACY_LUDICROUS
+      Accuracy = CHOL_ACCURACY_DEBUG
       ExternalOrdering = ORBITAL_ORDERING_DALTON
-      Units = SYS_UNITS_ANGSTROM
+      Units = SYS_UNITS_BOHR
       if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
             SortAngularMomenta = .false.
       else if (ExternalOrdering == ORBITAL_ORDERING_MOLPRO) then
@@ -51,21 +52,23 @@ program test
             call msg("Check angular momenta ordering")
       end if
 
-      call test_molcas(XYZPath, Units, BasisSetPath)
+!      call test_molcas(XYZPath, Units, BasisSetPath)
       
-!      call test_Dalton(XYZPath, Units, BasisSetPath)
-      ! call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, HFOrbitalsPath, &
-      !       AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
+
+
+      
       ! call test_Grid(BasisSetPath, XYZPath, HFOrbitalsPath, &
       !       AOSource, SpherAO, ExternalOrdering, SortAngularMomenta, Units)
       
       
-  !    call test_Fock_Molpro(BasisSetPath, XYZPath, HFOrbitalsPath, SpherAO, Accuracy)
-
-  !    if (ExternalOrdering == ORBITAL_ORDERING_MOLPRO) then
-  !          call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, NaturalOrbitalsPath, &
-  !                AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta)
-  !    end if
+      if (ExternalOrdering == ORBITAL_ORDERING_DALTON) then
+            call test_Dalton(XYZPath, Units, BasisSetPath)
+            call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, HFOrbitalsPath, &
+                  AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
+      else if (ExternalOrdering == ORBITAL_ORDERING_MOLPRO) then
+            call test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, NaturalOrbitalsPath, &
+                  AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
+      end if
 
   !    if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
   !          call msg("-- Testing Orca overlap integral ---")
@@ -105,7 +108,7 @@ contains
             allocate(S_extao_2(NAO, NAO))
 
             call ints1e_OverlapMatrix(S_cao, AOBasis)            
-            call linalg_smfill(S_cao)
+            call real_smfill(S_cao)
 
             allocate(TransfWork(NAOSpher*NAOCart))
             call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
@@ -164,7 +167,7 @@ contains
             allocate(S_extao_2(NAO, NAO))
 
             call ints1e_OverlapMatrix(S_cao, AOBasis)            
-            call linalg_smfill(S_cao)
+            call real_smfill(S_cao)
 
             allocate(TransfWork(NAOSpher*NAOCart))
             call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
@@ -218,16 +221,13 @@ contains
                         r = r + 1
                   end do
             end do
-            call linalg_smfill(S)
+            call real_smfill(S)
       end subroutine orca_read_symmetric_matrix
 
 
-      
-      
-
       subroutine test_Transform_OTF(RawIntegralsPath, BasisSetPath, XYZPath, NaturalOrbitalsPath, &
             AOSource, SpherAO, Accuracy, ExternalOrdering, SortAngularMomenta, Units)
-            
+
             character(*), intent(in) :: RawIntegralsPath
             character(*), intent(in) :: BasisSetPath
             character(*), intent(in) :: XYZPath
@@ -241,7 +241,7 @@ contains
 
             integer :: NAO, Na, Nb, a0, a1, b0, b1
             real(F64), dimension(:, :), allocatable :: CA, CB
-            real(F64), dimension(:, :), allocatable :: Rkab, RkabOTF
+            real(F64), dimension(:, :), allocatable :: Rkab, RkabOTF, RkabTHC
             integer :: iunit
             integer :: nrep, nbas(8)
             logical :: OnTheFly
@@ -261,7 +261,7 @@ contains
             read(iunit) CAONO(1:NAO,1:NAO)
             read(iunit) CSAONO(1:NAO,1:NAO)
             close(iunit)
-            
+
             a0 = 1
             a1 = NAO
             b0 = 1
@@ -279,7 +279,16 @@ contains
                   RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
                   SortAngularMomenta, Units)
 
+            call thc_gammcor_Rkab(RkabTHC, CAONO, a0, a1, CAONO, b0, b1, BasisSetPath, XYZPath, Accuracy, SpherAO, &
+                  ExternalOrdering, SortAngularMomenta, Units)
+
+            call msg("------------- checking Cholesky binary vs Cholesky on the fly ----------------------")            
             call test_CheckRkab(Rkab, RkabOTF, NA, NB, size(Rkab,dim=1), size(RkabOTF,dim=1))
+            call msg("------------- checking Cholesky binary vs Cholesky THC  ----------------------")
+            call test_CheckRkab(Rkab, RkabTHC, NA, NB, size(Rkab,dim=1), size(RkabTHC,dim=1))
+
+            call msg("------------- checking Cholesky OTF vs Cholesky THC  ----------------------")
+            call test_CheckRkab(RkabOTF, RkabTHC, NA, NB, size(RkabOTF,dim=1), size(RkabTHC,dim=1))
       end subroutine test_Transform_OTF
 
 
@@ -298,104 +307,37 @@ contains
             call msg("Testing on the fly integrals")
             MaxAbsErr = ZERO
             MaxRelErr = ZERO
-            do d = 1, NB
-                  do c = 1, NA
-                        do b = 1, NB
-                              do a = 1, NA
-                                    Vabcd = dot_product(Rkab(:, a, b), Rkab(:, c, d))
-                                    VabcdOTF = dot_product(RkabOTF(:, a, b), RkabOTF(:, c, d))                                    
-                                    AbsErr = abs(Vabcd-VabcdOTF)
-                                    if (abs(Vabcd) > 1.0E-5_F64) then
-                                          RelErr = abs(Vabcd-VabcdOTF)/abs(Vabcd)
-                                    else
-                                          RelErr = ZERO
-                                    end if
-                                    if (AbsErr > MaxAbsErr) then
-                                          MaxAbsErr = AbsErr
-                                          Val1 = Vabcd
-                                          Val1OTF = VabcdOTF
-                                    end if
-                                    if (RelErr > MaxRelErr) then
-                                          MaxRelErr = RelErr
-                                          Val2 = Vabcd
-                                          Val2OTF = VabcdOTF
-                                    end if
-                              end do
-                        end do
+            do b = 1, NB
+                  do a = 1, NA
+                        c = a
+                        d = b
+                        Vabcd = dot_product(Rkab(:, a, b), Rkab(:, c, d))
+                        VabcdOTF = dot_product(RkabOTF(:, a, b), RkabOTF(:, c, d))                                    
+                        AbsErr = abs(Vabcd-VabcdOTF)
+                        if (abs(Vabcd) > 1.0E-5_F64) then
+                              RelErr = abs(Vabcd-VabcdOTF)/abs(Vabcd)
+                        else
+                              RelErr = ZERO
+                        end if
+                        if (AbsErr > MaxAbsErr) then
+                              MaxAbsErr = AbsErr
+                              Val1 = Vabcd
+                              Val1OTF = VabcdOTF
+                        end if
+                        if (RelErr > MaxRelErr) then
+                              MaxRelErr = RelErr
+                              Val2 = Vabcd
+                              Val2OTF = VabcdOTF
+                        end if
                   end do
             end do
             call msg("Maximum absolute error: " // str(MaxAbsErr,d=1) // " at (ab|cd) = " // str(Val1,d=10))
-            call msg("                               (ab|cd)OTF   = " // str(Val1OTF,d=10))
+            call msg("                               (ab|cd)Approx = " // str(Val1OTF,d=10))
             call msg("Maximum relative error: " // str(MaxRelErr,d=1) // " at (ab|cd) = " // str(Val2,d=10))
-            call msg("                               (ab|cd)OTF   = " // str(Val2OTF,d=10))
+            call msg("                               (ab|cd)Approx = " // str(Val2OTF,d=10))
       end  subroutine test_CheckRkab
 
 
-
-      subroutine test_Fock_Molpro(BasisSetPath, XYZPath, HFOrbitalsPath, SpherAO, Accuracy)            
-            character(*), intent(in) :: BasisSetPath
-            character(*), intent(in) :: XYZPath
-            character(*), intent(in) :: HFOrbitalsPath
-            logical, intent(in)      :: SpherAO
-            integer, intent(in)      :: Accuracy
-
-            integer :: NAO, NMO
-            integer :: iunit
-            integer :: NOcc
-            integer :: p
-            logical :: OnTheFly
-            type(TSystem) :: System
-            type(TAOBasis) :: AOBasis
-            type(TCholeskyVecsOTF) :: CholeskyVecs
-            real(F64), dimension(:, :), allocatable :: Rho_mo, F_mo, H0_mo
-            real(F64), dimension(:), allocatable :: OrbEnergies
-            integer, parameter :: Units = SYS_UNITS_ANGSTROM
-            real(F64), dimension(:, :), allocatable :: CAONO, CSAONO
-            integer, parameter :: MaxBufferDimMB = 10 ! buffer for mo transf, in megabytes
-            logical, parameter :: SortAngularMomenta = .false.
-            real(F64), parameter :: KScal = 1.0_F64
-            integer, parameter :: ExternalOrdering = ORBITAL_ORDERING_MOLPRO
-                        
-            open(newunit=iunit,file=HFOrbitalsPath,form='UNFORMATTED')
-            read(iunit) NAO
-            allocate(CAONO(1:NAO,1:NAO))
-            allocate(CSAONO(1:NAO,1:NAO))
-            read(iunit) CAONO(1:NAO,1:NAO)
-            read(iunit) CSAONO(1:NAO,1:NAO)
-            close(iunit)
-
-            call auto2e_init()
-            call sys_Read_XYZ(System, XYZPath, Units)
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
-
-            if ((SpherAO .and. NAO /= AOBasis%NAOSpher) .or. &
-                  (.not. SpherAO .and. NAO /= AOBAsis%NAOCart)) then
-                  call msg("Invalid number of orbitals")
-                  error stop
-            end if
-            
-            NMO = NAO
-            NOcc = System%NElectrons/2
-            allocate(Rho_mo(NMO, NMO))
-            Rho_mo = ZERO
-            do p = 1, NOcc
-                  Rho_mo(p, p) = TWO
-            end do
-            allocate(F_mo(NMO, NMO))
-            allocate(H0_mo(NMO, NMO))
-
-            call chol_Rkpq_OTF(CholeskyVecs, AOBasis, Accuracy)
-
-            call chol_F(F_mo, H0_mo, Rho_mo, CAONO, KScal, CholeskyVecs, AOBasis, &
-                  System, ExternalOrdering, MaxBufferDimMB)
-
-            print *, "------------------------- F_MO ----------------------------"            
-            call geprn(F_mo)
-            print *, "------------------------- H0_MO ---------------------------"
-            call geprn(H0_mo)                       
-      end subroutine test_Fock_Molpro
-
-      
       subroutine test_Dalton(XYZPath, Units, BasisSetPath)
             character(*), intent(in) :: XYZPath
             integer, intent(in)      :: Units
@@ -440,9 +382,9 @@ contains
             call ints1e_Coulomb(V_cao, AOBasis, System)
             call ints1e_Kinetic(T_cao, AOBasis)
             
-            call linalg_smfill(S_cao)
-            call linalg_smfill(T_cao)
-            call linalg_smfill(V_cao)
+            call real_smfill(S_cao)
+            call real_smfill(T_cao)
+            call real_smfill(V_cao)
             
             allocate(TransfWork(NAOSpher*NAOCart))
             call SpherGTO_TransformMatrix_U(S_sao, S_cao, &
@@ -595,4 +537,89 @@ contains
             call msg("Rho integral    " // str(RhoIntegral,d=6))
             call msg("DivRho integral " // str(DivRhoIntegral,d=6))
       end subroutine test_Grid
+
+
+      subroutine chol_MOVecs_v2(Rkab, CA, a0, a1, CB, b0, b1, MaxBufferDimMB, OnTheFly, &
+            RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
+            SortAngularMomenta, Units)
+
+            real(F64), dimension(:, :), allocatable, intent(out) :: Rkab
+            real(F64), dimension(:, :), intent(in)               :: CA
+            integer, intent(in)                                  :: a0, a1
+            real(F64), dimension(:, :), intent(in)               :: CB
+            integer, intent(in)                                  :: b0, b1
+            integer, intent(in)                                  :: MaxBufferDimMB
+            logical, intent(in)                                  :: OnTheFly
+            character(*), intent(in)                             :: RawIntegralsPath
+            integer, intent(in)                                  :: AOSource
+            character(*), intent(in)                             :: BasisSetPath
+            character(*), intent(in)                             :: XYZPath
+            integer, intent(in)                                  :: Accuracy
+            logical, intent(in)                                  :: SpherAO
+            integer, intent(in)                                  :: ExternalOrdering
+            logical, intent(in)                                  :: SortAngularMomenta
+            integer, intent(in)                                  :: Units
+
+            type(TCholeskyVecs) :: CholeskyVecs
+            type(TCholeskyVecsOTF) :: CholeskyVecsOTF
+            type(TAOBasis) :: AOBasis
+            type(TSystem) :: System
+            integer :: NCholesky, NA, NB
+            integer :: NAO
+            !
+            ! Read the XYZ coordinates and atom types
+            !
+            call sys_Read_XYZ(System, XYZPath, Units)
+            !
+            ! Read the basis set parameters from an EMSL text file
+            ! (GAMESS-US format, no need for any edits, just download it straight from the website)
+            !
+            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+            if (AOBasis%SpherAO) then
+                  NAO = AOBasis%NAOSpher
+            else
+                  NAO = AOBasis%NAOCart
+            end if
+            NA = a1 - a0 + 1
+            NB = b1 - b0 + 1
+            if (OnTheFly) then
+                  !
+                  ! Compute Cholesky vectors in AO basis
+                  !
+                  call chol_gammcor_Rkpq(CholeskyVecsOTF, AOBasis, Accuracy)
+                  !
+                  ! Transform Cholesky vectors to MO basis
+                  !
+                  NCholesky = CholeskyVecsOTF%Chol2Data%NVecs
+                  allocate(Rkab(NCholesky,NA*NB))
+                  call chol_gammcor_Rkab(Rkab, CA, a0, a1, CB, b0, b1, MaxBufferDimMB, &
+                        CholeskyVecsOTF, AOBasis, ExternalOrdering)
+            else
+                  !
+                  ! Cholesky with two-electron integrals read from the disk
+                  !
+                  call chol_Rkpq_ExternalBinary(CholeskyVecs, RawIntegralsPath, NAO, &
+                        AOSource, Accuracy)
+                  !
+                  ! Transform Cholesky vectors to MO basis                  
+                  !
+                  NCholesky = CholeskyVecs%NCholesky
+                  allocate(Rkab(NCholesky,NA*NB))
+                  call chol_Rkab_ExternalBinary(Rkab, CholeskyVecs, CA, a0, a1, CB, b0, b1, MaxBufferDimMB)
+            end if
+      end subroutine chol_MOVecs_v2
+
+
+      subroutine chol_Rkpq_ExternalBinary(CholeskyVecs, RawIntegralsPath, NAO, AOSource, Accuracy)
+            !
+            ! Cholesky vectors in AO basis computed with two-electron integrals read from disk.
+            !            
+            type(TCholeskyVecs), intent(out) :: CholeskyVecs
+            character(*), intent(in)         :: RawIntegralsPath
+            integer, intent(in)              :: NAO
+            integer, intent(in)              :: AOSource
+            integer, intent(in)              :: Accuracy
+
+            call chol_CoulombMatrix(CholeskyVecs, NAO, RawIntegralsPath, AOSource, Accuracy)
+      end subroutine chol_Rkpq_ExternalBinary
 end program test

@@ -3,6 +3,7 @@ module BeckeGrid
       use LebedevGrid
       use sys_definitions
       use grid_definitions
+      use math_constants
       use periodic
       use string
       use display
@@ -12,7 +13,7 @@ module BeckeGrid
       
 contains
       
-      subroutine becke_MolecularGrid(Xk, Yk, Zk, Wk, NPoints, GridType, System, AOBasis)            
+      subroutine becke_MolecularGrid(Xk, Yk, Zk, Wk, NPoints, GridType, System, AOBasis, Phi2Thresh)
             real(F64), dimension(:), allocatable, intent(out)  :: Xk
             real(F64), dimension(:), allocatable, intent(out)  :: Yk
             real(F64), dimension(:), allocatable, intent(out)  :: Zk
@@ -21,6 +22,7 @@ contains
             integer, intent(in)                                :: GridType
             type(TSystem), intent(in)                          :: System
             type(TAOBasis), intent(in)                         :: AOBasis
+            real(F64), optional, intent(in)                    :: Phi2Thresh
             
             type(TLebedevGrid), dimension(LEBEDEV_NGRIDS) :: LebedevGrids
             integer, dimension(LEBEDEV_LMAX) :: LebedevLMap
@@ -42,7 +44,8 @@ contains
             integer :: MaxNPoints
             integer :: NDiscarded1, NDiscarded2
             real(F64), parameter :: WkBeckeThresh = ZERO
-            real(F64), parameter :: PhiSquaredThresh = 1.0E-24_F64
+            real(F64), parameter :: Phi2ThreshDefault = 1.0E-24_F64
+            real(F64) :: PhiSquaredThresh
 
             ThisImage = this_image()
             NImages = num_images()
@@ -50,6 +53,11 @@ contains
             allocate(AtomElementMap(NAtoms))
             call sys_ElementsList(ZList, ZCount, AtomElementMap, NElements, System, SYS_ALL_ATOMS)
             call lebedev_init(LebedevGrids, LebedevLMap)
+            if (present(Phi2Thresh)) then
+                  PhiSquaredThresh = Phi2Thresh
+            else
+                  PhiSquaredThresh = Phi2ThreshDefault
+            end if
             MaxNPoints = 0
             allocate(IsolatedAtomGrids(NElements))
             do k = 1, NElements
@@ -179,7 +187,7 @@ contains
                         ! Remove points for which all atomic orbitals are almost zero.
                         ! Removing those points is important for grids employed in tensor
                         ! hypercontraction because the THC subroutine assumes that at least
-                        ! a single atomic orbital is nonnegligible for each grid point.
+                        ! one single atomic orbital is nonnegligible at each grid point.
                         !
                         call becke_RemoveDistantPoints(Xk, Yk, Zk, Wk, NPoints, AOBasis, PhiSquaredThresh)
                         NDiscarded2 = NPointsInit - NDiscarded1 - NPoints

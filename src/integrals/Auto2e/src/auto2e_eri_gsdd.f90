@@ -25,6 +25,7 @@
 !
 module auto2e_eri_gsdd
 use arithmetic
+use math_constants
 use auto2e_KetTransfer
 use auto2e_SpherTransf
 use auto2e_WMatrix_part1
@@ -296,40 +297,6 @@ call auto2e_eri_Spher_4_0_2_2(H, Ra, CntrA, ExpA, NprimA, &
 call auto2e_Normalize_Spher_4_0_2_2_DCAB(G, H, NormA, NormB, NormC, NormD)
 end subroutine auto2e_frontend_Spher_4_0_2_2
 
-subroutine auto2e_frontend_2_2_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-real(F64), dimension(540) :: H
-call auto2e_eri_4_0_2_2(H, Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, &
-   Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, Kappa)
-call auto2e_Normalize_4_0_2_2_ABDC(G, H, NormC, NormD, NormA, NormB)
-end subroutine auto2e_frontend_2_2_4_0
-
-subroutine auto2e_frontend_Spher_2_2_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-real(F64), dimension(225) :: H
-call auto2e_eri_Spher_4_0_2_2(H, Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, &
-   Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, Kappa)
-call auto2e_Normalize_Spher_4_0_2_2_ABDC(G, H, NormC, NormD, NormA, NormB)
-end subroutine auto2e_frontend_Spher_2_2_4_0
-
 subroutine auto2e_frontend_2_2_0_4(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
@@ -363,4 +330,38 @@ call auto2e_eri_Spher_4_0_2_2(H, Rd, CntrD, ExpD, NprimD, &
    Rb, CntrB, ExpB, NprimB, Kappa)
 call auto2e_Normalize_Spher_4_0_2_2_ABDC(G, H, NormD, NormC, NormA, NormB)
 end subroutine auto2e_frontend_Spher_2_2_0_4
+
+subroutine auto2e_frontend_2_2_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(540) :: H
+call auto2e_eri_4_0_2_2(H, Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, &
+   Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, Kappa)
+call auto2e_Normalize_4_0_2_2_ABDC(G, H, NormC, NormD, NormA, NormB)
+end subroutine auto2e_frontend_2_2_4_0
+
+subroutine auto2e_frontend_Spher_2_2_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(225) :: H
+call auto2e_eri_Spher_4_0_2_2(H, Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, &
+   Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, Kappa)
+call auto2e_Normalize_Spher_4_0_2_2_ABDC(G, H, NormC, NormD, NormA, NormB)
+end subroutine auto2e_frontend_Spher_2_2_4_0
 end module auto2e_eri_gsdd

@@ -12,7 +12,7 @@ The build script of gammcor-cholesky generates static library `cholesky.a`, whic
 ## Installation
 #### 1. Clone the repository
 ```
-git clone git@github.com:modrzejewski/gammcor-cholesky.git
+git clone git@github.com:modrzejewski/gammcor-integrals.git
 ```
 
 #### 2. Compile static library file
