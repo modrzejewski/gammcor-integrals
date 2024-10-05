@@ -115,6 +115,37 @@ contains
       end subroutine thc_gammcor_Rkab_Batch_a_Fixed_b
 
 
+      subroutine thc_gammcor_Vabcd_Batch_ab_Fixed_cd(Vabcd, XXgab, ZXXkab, ZXXkcd, &
+            Xga, Xgb, Xgc, Xgd, Zgk, Na, Nb, NCholesky, NGridTHC)
+            
+            integer, intent(in)                                   :: Na, Nb
+            integer, intent(in)                                   :: NCholesky, NGridTHC
+            real(F64), dimension(Na, Nb), intent(out)             :: Vabcd
+            real(F64), dimension(NGridTHC, Na), intent(out)       :: XXgab
+            real(F64), dimension(NCholesky, Na), intent(out)      :: ZXXkab
+            real(F64), dimension(NCholesky), intent(out)          :: ZXXkcd
+            real(F64), dimension(NGridTHC, Na), intent(in)        :: Xga
+            real(F64), dimension(NGridTHC, Nb), intent(in)        :: Xgb
+            real(F64), dimension(NGridTHC), intent(in)            :: Xgc
+            real(F64), dimension(NGridTHC), intent(in)            :: Xgd
+            real(F64), dimension(NGridTHC, NCholesky), intent(in) :: Zgk
+
+            integer :: a, b
+
+            XXgab(:, 1) = Xgc(:) * Xgd(:)
+            call real_ATv(ZXXkcd, Zgk, XXgab(:, 1))
+            do b = 1, Nb
+                  !$omp parallel do private(a)
+                  do a = 1, Na
+                        XXgab(:, a) = Xga(:, a) * Xgb(:, b)
+                  end do
+                  !$omp end parallel do
+                  call real_aTb(ZXXkab, Zgk, XXgab)
+                  call real_ATv(Vabcd(:, b), ZXXkab, ZXXkcd)
+            end do
+      end subroutine thc_gammcor_Vabcd_Batch_ab_Fixed_cd
+
+
       subroutine thc_gammcor_Xga(Xga, Xgp, C_extao, AOBasis, ExternalOrdering)
             real(F64), dimension(:, :), intent(out) :: Xga
             real(F64), dimension(:, :), intent(in)  :: Xgp
