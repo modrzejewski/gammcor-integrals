@@ -166,12 +166,14 @@ contains
       end subroutine thc_gammcor_Xga
 
       
-      subroutine thc_gammcor_XZ(Xgp, Zgk, AOBasis, System, Accuracy)
+      subroutine thc_gammcor_XZ(Xgp, Zgk, AOBasis, System, Accuracy, CholeskyThresh, THCThresh)
             real(F64), dimension(:, :), allocatable, intent(out) :: Xgp
             real(F64), dimension(:, :), allocatable, intent(out) :: Zgk
             type(TAOBasis), intent(in)                           :: AOBasis
             type(TSystem), intent(in)                            :: System
             integer, intent(in)                                  :: Accuracy
+            real(F64), optional, intent(in)                      :: CholeskyThresh
+            real(F64), optional, intent(in)                      :: THCThresh
 
             type(TCoulTHCGrid) :: THCGrid
             type(TTHCParams) :: THCParams
@@ -195,6 +197,8 @@ contains
                   call msg("Invalid THC accuracy value", MSG_ERROR)
                   error stop
             end select
+            if (present(CholeskyThresh)) Chol2Params%CholeskyTauThresh = CholeskyThresh
+            if (present(THCThresh)) THCParams%QRThresh = THCThresh
             THCParams%QRThreshReduced = THCParams%QRThresh
             !
             ! Initialize the molecular integrals library.
