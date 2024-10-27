@@ -305,7 +305,7 @@ contains
             NAO = AOBasis%NAOSpher
             NActive = size(Cpa_extao, dim=2)
             NInactive = size(Cpi_extao, dim=2)
-            NVirtual = size(Cpa_extao, dim=2)
+            NVirtual = size(Cpv_extao, dim=2)
             NOccupied = NInactive + NActive
             NMO = NInactive + NActive + NVirtual
             NGridTHC = size(Xgp, dim=1)
