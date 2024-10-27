@@ -400,6 +400,8 @@ contains
                   case (ORBITAL_ORDERING_OPEN_MOLCAS)
                         AngFuncMap = Open_Molcas_AngFuncMap
                         SortedAngularFunctions = .true.
+                  case (ORBITAL_ORDERING_PYSCF)
+                        AngFuncMap = PySCF_AngFuncMap
                   case default
                         call msg("Invalid external orbital ordering")
                         error stop
