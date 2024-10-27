@@ -288,6 +288,20 @@ contains
             
             call clock_start(timer)
             call msg("Started THC Fock matrix build")
+            !
+            ! Initialize the molecular integrals library.
+            ! The init subroutine binds subroutines to subroutine pointers.
+            !
+            call auto2e_init()
+            !
+            ! Initialize the Boys function interpolation table
+            ! (used for Coulomb integrals evaluation).
+            !
+            call boys_init(4 * AUTO2E_MAXL)
+            if (AOBasis%LmaxGTO > AUTO2E_MAXL) then
+                  call msg("Basis set includes angular momenta unsupported by the Auto2e subroutine")
+                  error stop
+            end if
             NAO = AOBasis%NAOSpher
             NActive = size(Cpa_extao, dim=2)
             NInactive = size(Cpi_extao, dim=2)
@@ -327,5 +341,11 @@ contains
             call real_ab(Fpv, Fpq(:, :, 1), Cpv)
             call real_aTb(Fvw, Cpv, Fpv)
             call msg("Fock matrix completed in " // str(clock_readwall(timer),d=1) // " seconds")
+            !
+            ! Deallocate the Boys function interpolation tables
+            ! to avoid allocation of already allocated arrays
+            ! if this subroutine is called again
+            !
+            call boys_free()
       end subroutine thc_gammcor_F
 end module THC_Gammcor
