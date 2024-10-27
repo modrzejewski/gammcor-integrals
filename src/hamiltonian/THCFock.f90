@@ -194,7 +194,7 @@ contains
             allocate(Vpq(NAO, NAO))
             call ints1e_T(Tpq, AOBasis)
             call ints1e_Vne(Vpq, AOBasis, System)
-            NSpins = size(Cpi, dim=2)
+            NSpins = size(Cpi, dim=3)
             do s = 1, NSpins
                   if (NOcc(s) > 0) then
                         Fpq(:, :, s) = Fpq(:, :, s) + Tpq(:, :)
