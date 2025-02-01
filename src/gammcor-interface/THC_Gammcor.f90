@@ -168,7 +168,9 @@ contains
       end subroutine thc_gammcor_Xga
 
       
-      subroutine thc_gammcor_XZ(Xgp, Zgk, AOBasis, System, Accuracy, CholeskyThresh, THCThresh)
+      subroutine thc_gammcor_XZ(Xgp, Zgk, AOBasis, System, Accuracy, &
+            CholeskyThresh, THCThresh, Omega)
+            
             real(F64), dimension(:, :), allocatable, intent(out) :: Xgp
             real(F64), dimension(:, :), allocatable, intent(out) :: Zgk
             type(TAOBasis), intent(in)                           :: AOBasis
@@ -176,10 +178,12 @@ contains
             integer, intent(in)                                  :: Accuracy
             real(F64), optional, intent(in)                      :: CholeskyThresh
             real(F64), optional, intent(in)                      :: THCThresh
+            real(F64), optional, intent(in)                      :: Omega
 
             type(TCoulTHCGrid) :: THCGrid
             type(TTHCParams) :: THCParams
             type(TChol2Params) :: Chol2Params
+            real(F64) :: Kappa
 
             THCParams%THC_QuadraticMemory = .true.
             select case (Accuracy)
@@ -202,6 +206,20 @@ contains
             if (present(CholeskyThresh)) Chol2Params%CholeskyTauThresh = CholeskyThresh
             if (present(THCThresh)) THCParams%QRThresh = THCThresh
             THCParams%QRThreshReduced = THCParams%QRThresh
+            if (present(Omega)) then
+                  !
+                  ! If Omega is present, long-range Coulomb integrals
+                  ! will be computed with the Erf(Omega*r)/r operator
+                  !
+                  if (Omega > ZERO) then
+                        Kappa = ONE / Omega**2
+                  else
+                        Kappa = ZERO
+                  end if
+            else
+                  Kappa = ZERO
+            end if
+            Chol2Params%Kappa = Kappa
             !
             ! Initialize the molecular integrals library.
             ! The init subroutine binds subroutines to subroutine pointers.
