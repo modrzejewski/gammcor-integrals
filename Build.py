@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from subprocess import Popen
 import datetime
+from datetime import timezone
 import argparse
 from os import path
 import os
@@ -14,7 +15,7 @@ parser.add_argument("--clean", action="store_true", help="Remove all .obj and .m
 args = parser.parse_args()
 CompilerOptions = args.CompilerOptions
 nproc = args.np
-datetime_start = datetime.datetime.utcnow()
+datetime_start = datetime.datetime.now(timezone.utc)
 RootDir = path.dirname(path.realpath(__file__))
 ObjDir = path.join(RootDir, "obj")
 IncludeDir = path.join(RootDir, "include")
@@ -402,7 +403,9 @@ BatchList.append(["src/integrals/Cholesky/Cholesky.f90"])
 BatchList.append(["src/integrals/OneElectronInts.f90"])
 BatchList.append(["src/integrals/grid/GridFunctions.f90"])
 BatchList.append(["src/integrals/grid/BeckeGrid.f90"])
+BatchList.append(["src/integrals/Multipoles.f90"])
 BatchList.append(["src/integrals/THC/TensorHypercontraction.f90"])
+BatchList.append(["src/hamiltonian/THCFock.f90"])
 BatchList.append(["src/gammcor-interface/Auto2eInterface.f90"])
 BatchList.append(["src/gammcor-interface/OneElectronInts_Gammcor.f90"])
 BatchList.append(["src/gammcor-interface/THC_Gammcor.f90",
@@ -485,7 +488,7 @@ error_code = p.wait()
 if error_code != 0:
     sys.exit(error_code)
 
-datetime_finish = datetime.datetime.utcnow()
+datetime_finish = datetime.datetime.now(timezone.utc)
 td = datetime_finish - datetime_start
 dateformat = "%a %b %d %H:%M:%S UTC %Y"
 datestr_finish = datetime_finish.strftime(dateformat)

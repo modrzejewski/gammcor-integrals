@@ -250,7 +250,7 @@ contains
             end associate
       end subroutine sys_Init
 
-
+      
       subroutine sys_ElementsList(ZList, ZCount, AtomElementMap, NElements, System, AtomsType)
             integer, dimension(:), allocatable, intent(out) :: ZList
             integer, dimension(:), allocatable, intent(out) :: ZCount
@@ -511,6 +511,80 @@ contains
       end subroutine sys_NuclearRepulsion
 
 
+      subroutine sys_NuclearMultipoles(Dx, Dy, Dz, Qyx, Qzx, &
+            Qzy, Qxx, Qyy, Qzz, Rc, System)
+            
+            real(F64), intent(out)    :: Dx, Dy, Dz
+            real(F64), intent(out)    :: Qyx, Qzx, Qzy, Qxx, Qyy, Qzz
+            real(F64), dimension(3)   :: Rc
+            type(TSystem), intent(in) :: System
+
+            integer :: s, p0, p1, p
+            integer :: Z
+            real(F64), dimension(3) :: Rp, Rpc
+
+            Dx = ZERO
+            Dy = ZERO
+            Dz = ZERO
+            Qyx = ZERO
+            Qzx = ZERO
+            Qzy = ZERO
+            Qxx = ZERO
+            Qyy = ZERO
+            Qzz = ZERO
+            do s = 1, 2
+                  if (System%RealAtoms(2, s) >= System%RealAtoms(1, s)) then
+                        p0 = System%RealAtoms(1, s)
+                        p1 = System%RealAtoms(2, s)
+                        do p = p0, p1
+                              if (System%ECPCharges) then
+                                    Z = System%ZNumbersECP(p) 
+                              else
+                                    Z = System%ZNumbers(p)
+                              end if
+                              Rp(:) = System%AtomCoords(:, p)
+                              Rpc(:) = Rp(:) - Rc(:)
+                              Dx = Dx + Rpc(1) * Z
+                              Dy = Dy + Rpc(2) * Z
+                              Dz = Dz + Rpc(3) * Z
+                              Qyx = Qyx + Rpc(1)*Rpc(2) * Z
+                              Qzx = Qzx + Rpc(1)*Rpc(3) * Z
+                              Qzy = Qzy + Rpc(2)*Rpc(3) * Z
+                              Qxx = Qxx + Rpc(1)**2 * Z
+                              Qyy = Qyy + Rpc(2)**2 * Z
+                              Qzz = Qzz + Rpc(3)**2 * Z
+                        end do
+                  end if
+            end do
+      end subroutine sys_NuclearMultipoles
+
+
+      subroutine sys_ChargeCenter(Rc, System)
+            real(F64), dimension(3), intent(out) :: Rc
+            type(TSystem), intent(in)            :: System
+
+            integer :: SumZ, Z
+            integer :: s, p, p0, p1
+
+            Rc = ZERO
+            SumZ = System%NElectrons + System%Charge
+            do s = 1, 2
+                  if (System%RealAtoms(2, s) >= System%RealAtoms(1, s)) then
+                        p0 = System%RealAtoms(1, s)
+                        p1 = System%RealAtoms(2, s)
+                        do p = p0, p1
+                              if (System%ECPCharges) then
+                                    Z = System%ZNumbersECP(p) 
+                              else
+                                    Z = System%ZNumbers(p)
+                              end if
+                              Rc(:) = Rc(:) + real(Z, F64)/SumZ * System%AtomCoords(:, p)
+                        end do
+                  end if
+            end do
+      end subroutine sys_ChargeCenter
+
+      
       subroutine sys_Read_XYZ(System, FilePath, Units)
             type(TSystem), intent(out)    :: System
             character(*), intent(in)      :: FilePath
@@ -563,14 +637,14 @@ contains
                   end  if
             end do lines
             if (.not. XYZDefined) then
-                  call msg("XYZ coordinates not defined in file " // FilePath)
+                  call msg("XYZ coordinates not defined in file " // FilePath, MSG_ERROR)
                   error stop
             end if
             call sys_SortDistances(System)
             close(u)
       end subroutine sys_Read_XYZ
 
-      
+
       subroutine sys_Read_XYZ_NextLine(System, AtomIdx, line, Units)
             type(TSystem), intent(inout) :: System
             integer, intent(inout)       :: AtomIdx
@@ -596,7 +670,7 @@ contains
                   case (4)
                         System%SystemKind = SYS_TETRAMER
                   case default
-                        call msg("First line of the XYZ block has an invalid format")
+                        call msg("First line of the XYZ block has an invalid format", MSG_ERROR)
                         error stop
                   end select
                   AtomIdx = 0
@@ -634,35 +708,17 @@ contains
                                           System%AtomCoords(:, AtomIdx) = tobohr(System%AtomCoords(:, AtomIdx))
                                     end if
                               else
-                                    call msg("Unknown element: " // element)
+                                    call msg("Unknown element: " // element, MSG_ERROR)
                                     error stop
                               end if
                         else
-                              call msg("Inconsistent number of atoms specified")
+                              call msg("Inconsistent number of atoms specified", MSG_ERROR)
                               error stop
                         end if
                   else
-                        call msg("Unspecified number of atoms")
+                        call msg("Unspecified number of atoms", MSG_ERROR)
                         error stop
                   end if
             end if
-            
-      contains
-            
-            elemental function tobohr(l_angstrom)
-                  !
-                  ! Angstrom -> bohr conversion using
-                  ! CODATA 2010 value of bohr unit:
-                  ! 1 bohr = 0.52917721092d-10 m
-                  ! ------------------------------------------
-                  ! Note: GAMESS value of bohr is  0.52917725.
-                  ! Use this value when checking the code
-                  ! against GAMESS.
-                  !
-                  real(F64)             :: tobohr
-                  real(F64), intent(in) :: l_angstrom
-                  
-                  tobohr = l_angstrom / 0.52917721092_F64
-            end function tobohr
       end subroutine sys_Read_XYZ_NextLine
 end module sys_definitions

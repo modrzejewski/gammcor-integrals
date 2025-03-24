@@ -9,6 +9,8 @@ module THC_Gammcor
       use Auto2eInterface
       use real_linalg
       use TensorHypercontraction
+      use THCFock
+      use clock
       
       implicit none
 
@@ -166,7 +168,9 @@ contains
       end subroutine thc_gammcor_Xga
 
       
-      subroutine thc_gammcor_XZ(Xgp, Zgk, AOBasis, System, Accuracy, CholeskyThresh, THCThresh)
+      subroutine thc_gammcor_XZ(Xgp, Zgk, AOBasis, System, Accuracy, &
+            CholeskyThresh, THCThresh, Omega)
+            
             real(F64), dimension(:, :), allocatable, intent(out) :: Xgp
             real(F64), dimension(:, :), allocatable, intent(out) :: Zgk
             type(TAOBasis), intent(in)                           :: AOBasis
@@ -174,10 +178,12 @@ contains
             integer, intent(in)                                  :: Accuracy
             real(F64), optional, intent(in)                      :: CholeskyThresh
             real(F64), optional, intent(in)                      :: THCThresh
+            real(F64), optional, intent(in)                      :: Omega
 
             type(TCoulTHCGrid) :: THCGrid
             type(TTHCParams) :: THCParams
             type(TChol2Params) :: Chol2Params
+            real(F64) :: Kappa
 
             THCParams%THC_QuadraticMemory = .true.
             select case (Accuracy)
@@ -200,6 +206,20 @@ contains
             if (present(CholeskyThresh)) Chol2Params%CholeskyTauThresh = CholeskyThresh
             if (present(THCThresh)) THCParams%QRThresh = THCThresh
             THCParams%QRThreshReduced = THCParams%QRThresh
+            if (present(Omega)) then
+                  !
+                  ! If Omega is present, long-range Coulomb integrals
+                  ! will be computed with the Erf(Omega*r)/r operator
+                  !
+                  if (Omega > ZERO) then
+                        Kappa = ONE / Omega**2
+                  else
+                        Kappa = ZERO
+                  end if
+            else
+                  Kappa = ZERO
+            end if
+            Chol2Params%Kappa = Kappa
             !
             ! Initialize the molecular integrals library.
             ! The init subroutine binds subroutines to subroutine pointers.
@@ -224,4 +244,126 @@ contains
             !
             call boys_free()
       end subroutine thc_gammcor_XZ
+
+
+      subroutine thc_gammcor_F(Fij, Fvw, Cpi_extao, Cpa_extao, Cpv_extao, &
+            OccNum, Zgk, Xgp, AOBasis, System, ExternalOrdering)
+            !
+            ! Compute the Fock matrix, F, using THC-decomposed Coulomb integrals
+            !
+            ! F(p,q) = T(p,q) + Vne(p,q)
+            !        + Sum(k=1,...,NInactive+NActive) OccNum(i) (2 * (pq|kk) - (pk|kq))
+            !
+            ! The THC Fock matrix shoud be used to compute the canonical
+            ! inactive and virtual orbitals.
+            !
+            ! Fij
+            ! Fvw
+            !              Inactive-inactive (ij) and virtual-virtual (vw) blocks of F
+            !
+            ! Cpi_extao
+            ! Cpa_extao
+            ! Cpv_extao
+            !              Inactive (i), active (a), and virtual (v) orbital
+            !              coefficients in the AO basis (AO ordering of the external
+            !              program)
+            ! OccNum
+            !              Occupation numbers
+            !              0 <= OccNum(k) <= 1  for k = 1, ..., NInactive+NActive
+            !
+            ! Zgk, Xgp
+            !              Z and X matrices of the THC decomposition
+            !
+            ! AOBasis
+            !              Basis set definition
+            ! System
+            !              System definition
+            !
+            ! ExternalOrdering
+            !              Ordering of the AO funtions in the external program
+            !
+            real(F64), dimension(:, :), intent(out) :: Fij
+            real(F64), dimension(:, :), intent(out) :: Fvw
+            real(F64), dimension(:, :), intent(in)  :: Cpi_extao
+            real(F64), dimension(:, :), intent(in)  :: Cpa_extao
+            real(F64), dimension(:, :), intent(in)  :: Cpv_extao
+            real(F64), dimension(:), intent(in )    :: OccNum
+            real(F64), dimension(:, :), intent(in)  :: Zgk
+            real(F64), dimension(:, :), intent(in)  :: Xgp
+            type(TAOBasis), intent(in)              :: AOBasis
+            type(TSystem), intent(in)               :: System
+            integer, intent(in)                     :: ExternalOrdering
+
+            integer :: NOccupied, NActive, NInactive, NVirtual, NMO, NAO, NGridTHC
+            integer :: i0, i1, a0, a1, k
+            real(F64), dimension(:, :), allocatable :: Cpi, Cpv
+            real(F64), dimension(:, :, :), allocatable :: Fpq, Cpo
+            real(F64), dimension(:, :), allocatable :: Zgh
+            real(F64), dimension(:, :), allocatable :: Fpi, Fpv
+            real(F64) :: Nk
+            integer, dimension(2) :: NOcc
+            type(TClock) :: timer
+            
+            call clock_start(timer)
+            call msg("Started THC Fock matrix build")
+            !
+            ! Initialize the molecular integrals library.
+            ! The init subroutine binds subroutines to subroutine pointers.
+            !
+            call auto2e_init()
+            !
+            ! Initialize the Boys function interpolation table
+            ! (used for Coulomb integrals evaluation).
+            !
+            call boys_init(4 * AUTO2E_MAXL)
+            if (AOBasis%LmaxGTO > AUTO2E_MAXL) then
+                  call msg("Basis set includes angular momenta unsupported by the Auto2e subroutine")
+                  error stop
+            end if
+            NAO = AOBasis%NAOSpher
+            NActive = size(Cpa_extao, dim=2)
+            NInactive = size(Cpi_extao, dim=2)
+            NVirtual = size(Cpv_extao, dim=2)
+            NOccupied = NInactive + NActive
+            NMO = NInactive + NActive + NVirtual
+            NGridTHC = size(Xgp, dim=1)
+            if (size(OccNum) /= NOccupied) then
+                  call msg("Invalid size of the OccNum array", MSG_ERROR)
+                  error stop
+            end if
+            allocate(Cpi(NAO, NInactive))
+            allocate(Cpv(NAO, NVirtual))
+            allocate(Cpo(NAO, NOccupied, 1))
+            allocate(Fpq(NAO, NAO, 1))
+            allocate(Zgh(NGridTHC, NGridTHC))
+            allocate(Fpi(NAO, NInactive))
+            allocate(Fpv(NAO, NVirtual))
+            i0 = 1
+            i1 = NInactive
+            a0 = NInactive + 1
+            a1 = NInactive + NActive
+            call auto2e_interface_C(Cpi, Cpi_extao, AOBasis, ExternalOrdering)
+            call auto2e_interface_C(Cpv, Cpv_extao, AOBasis, ExternalOrdering)
+            Cpo(:, i0:i1, 1) = Cpi(:, :)
+            call auto2e_interface_C(Cpo(:, a0:a1, 1), Cpa_extao, AOBasis, ExternalOrdering)
+            do k = 1, NOccupied
+                  Nk = max(ZERO, OccNum(k))
+                  Cpo(:, k, 1) = Sqrt(Nk) * Cpo(:, k, 1)
+            end do
+            call real_abT(Zgh, Zgk, Zgk)
+            NOcc(1) = NOccupied
+            NOcc(2) = 0
+            call thc_Fock_F(Fpq, Cpo, NOcc, Zgh, Xgp, AOBasis, System)
+            call real_ab(Fpi, Fpq(:, :, 1), Cpi)
+            call real_aTb(Fij, Cpi, Fpi)
+            call real_ab(Fpv, Fpq(:, :, 1), Cpv)
+            call real_aTb(Fvw, Cpv, Fpv)
+            call msg("Fock matrix completed in " // str(clock_readwall(timer),d=1) // " seconds")
+            !
+            ! Deallocate the Boys function interpolation tables
+            ! to avoid allocation of already allocated arrays
+            ! if this subroutine is called again
+            !
+            call boys_free()
+      end subroutine thc_gammcor_F
 end module THC_Gammcor

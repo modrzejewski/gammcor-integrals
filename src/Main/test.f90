@@ -622,4 +622,64 @@ contains
 
             call chol_CoulombMatrix(CholeskyVecs, NAO, RawIntegralsPath, AOSource, Accuracy)
       end subroutine chol_Rkpq_ExternalBinary
+
+
+      subroutine test_Multipoles(BasisSetPath, XYZPath)
+            use Multipoles
+            
+            character(*), intent(in) :: BasisSetPath
+            character(*), intent(in) :: XYZPath
+            
+            type(TSystem) :: System
+            type(TAOBasis) :: AOBasis
+            real(F64), dimension(3) :: Rc
+            real(F64), dimension(:, :), allocatable :: Dx, Dy, Dz, Dx_extao, Dy_extao, Dz_extao
+            integer :: NAO
+            logical, parameter :: SortAngularMomenta = .false.
+
+            call auto2e_init()
+            !
+            ! Initialize the Boys function interpolation table
+            ! (used for Coulomb integrals evaluation).
+            !
+            call boys_init(4 * AUTO2E_MAXL)
+            call sys_Read_XYZ(System, XYZPath, SYS_UNITS_ANGSTROM)
+            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+            NAO = AOBasis%NAOSpher
+
+            !
+            ! Compute the charge center of the nuclei
+            ! Dipole moments will be computed with respect to Rc
+            !
+            call sys_ChargeCenter(Rc, System)
+            !
+            ! Calculate x, y, and z electronic dipole moment matrices
+            ! in the spherical AO gaussian Basis. The ordering of orbitals
+            ! follows the gammcor-integrals convention.
+            !
+            allocate(Dx(NAO, NAO))
+            allocate(Dy(NAO, NAO))
+            allocate(Dz(NAO, NAO))
+            call multi_ElectronicDipole(Dx, Dy, Dz, Rc, AOBasis)
+            !
+            ! Convert Dx, Dy, Dz matrices
+            ! to the AO basis with Dalton's ordering
+            !
+            allocate(Dx_extao(NAO, NAO))
+            allocate(Dy_extao(NAO, NAO))
+            allocate(Dz_extao(NAO, NAO))
+            call auto2e_interface_AngFuncTransf(Dx_extao, Dx, .false., .true., AOBasis, ORBITAL_ORDERING_DALTON)
+            call auto2e_interface_AngFuncTransf(Dy_extao, Dy, .false., .true., AOBasis, ORBITAL_ORDERING_DALTON)
+            call auto2e_interface_AngFuncTransf(Dz_extao, Dz, .false., .true., AOBasis, ORBITAL_ORDERING_DALTON)
+
+            call msg("---------------- dipole matrices in Dalton's convention ---------------------")
+            call msg("Dx")
+            call geprn(Dx_extao)
+            call msg("Dy")
+            call geprn(Dy_extao)
+            call msg("Dz")
+            call geprn(Dz_extao)
+            
+            call boys_free()
+      end subroutine test_Multipoles
 end program test
