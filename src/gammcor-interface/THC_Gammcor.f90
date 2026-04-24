@@ -247,7 +247,7 @@ contains
 
 
       subroutine thc_gammcor_F(Fij, Fvw, Cpi_extao, Cpa_extao, Cpv_extao, &
-            OccNum, Zgk, Xgp, AOBasis, System, ExternalOrdering)
+            OccNum, Zgk, Xgp, AOBasis, System, ExternalOrdering) 
             !
             ! Compute the Fock matrix, F, using THC-decomposed Coulomb integrals
             !
