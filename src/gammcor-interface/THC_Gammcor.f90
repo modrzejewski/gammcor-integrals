@@ -247,7 +247,7 @@ contains
 
 
       subroutine thc_gammcor_F(Fij, Fvw, Cpi_extao, Cpa_extao, Cpv_extao, &
-            OccNum, Zgk, Xgp, AOBasis, System, ExternalOrdering) 
+            OccNum, Zgk, Xgp, AOBasis, System, ExternalOrdering, ext_int1e) 
             !
             ! Compute the Fock matrix, F, using THC-decomposed Coulomb integrals
             !
@@ -293,6 +293,8 @@ contains
             type(TAOBasis), intent(in)              :: AOBasis
             type(TSystem), intent(in)               :: System
             integer, intent(in)                     :: ExternalOrdering
+            real(F64), dimension(:, :), intent(in), optional  :: ext_int1e
+            
 
             integer :: NOccupied, NActive, NInactive, NVirtual, NMO, NAO, NGridTHC
             integer :: i0, i1, a0, a1, k
@@ -300,8 +302,12 @@ contains
             real(F64), dimension(:, :, :), allocatable :: Fpq, Cpo
             real(F64), dimension(:, :), allocatable :: Zgh
             real(F64), dimension(:, :), allocatable :: Fpi, Fpv
+            logical, parameter :: CoulContrib = .true.                                                                                                                       
+            logical, parameter :: ExchContrib = .true.                                                                                                                       
+            real(F64), parameter :: KScal = ONE       
             real(F64) :: Nk
             integer, dimension(2) :: NOcc
+            integer :: s, Nspins
             type(TClock) :: timer
             
             call clock_start(timer)
@@ -353,7 +359,17 @@ contains
             call real_abT(Zgh, Zgk, Zgk)
             NOcc(1) = NOccupied
             NOcc(2) = 0
-            call thc_Fock_F(Fpq, Cpo, NOcc, Zgh, Xgp, AOBasis, System)
+            if (present(ext_int1e)) then
+                  call thc_Fock_JK(Fpq, Cpo, Zgh, Xgp, NOcc, CoulContrib, ExchContrib, KScal)                                                                                      
+                  NSpins = size(Cpo, dim=3)                                                                                                                                        
+                  do s = 1, NSpins                                                                                                                                                 
+                        if (NOcc(s) > 0) then                                                                                                                                      
+                              Fpq(:, :, s) = Fpq(:, :, s) + ext_int1e(:, :)    
+                        end if
+                  end do
+            else
+                  call thc_Fock_F(Fpq, Cpo, NOcc, Zgh, Xgp, AOBasis, System)
+            end if
             call real_ab(Fpi, Fpq(:, :, 1), Cpi)
             call real_aTb(Fij, Cpi, Fpi)
             call real_ab(Fpv, Fpq(:, :, 1), Cpv)
