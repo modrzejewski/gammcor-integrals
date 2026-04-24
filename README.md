@@ -1,7 +1,4 @@
-l# gammcor-integrals
-Authors: Marcin Modrzejewski, Michał Hapka
----
-
+# gammcor-integrals
 Molecular integrals library for the Gammcor code of Pernal et al.:
 * Cholesky decomposition of Coulomb integrals,
 * AO->MO transformation,
@@ -28,3 +25,9 @@ cd <repository_name>
 ```
 
 The build script generates static library file `./lib/cholesky.a`. This file should be linked with the main gammcor program. Fortran header files (`.mod`) are stored in `./include`. The mod files directory should be added to the include path of Gammcor.
+
+## Contributors
+* Marcin Modrzejewski
+* Michał Hapka
+* Aleksandra Tucholska
+---
