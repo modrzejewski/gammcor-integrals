@@ -651,7 +651,7 @@ contains
             ! Compute the charge center of the nuclei
             ! Dipole moments will be computed with respect to Rc
             !
-            call sys_ChargeCenter(Rc, System)
+            call sys_ChargeCenter(Rc, System) 
             !
             ! Calculate x, y, and z electronic dipole moment matrices
             ! in the spherical AO gaussian Basis. The ordering of orbitals

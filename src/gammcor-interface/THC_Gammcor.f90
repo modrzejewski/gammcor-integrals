@@ -247,7 +247,7 @@ contains
 
 
       subroutine thc_gammcor_F(Fij, Fvw, Cpi_extao, Cpa_extao, Cpv_extao, &
-            OccNum, Zgk, Xgp, AOBasis, System, ExternalOrdering)
+            OccNum, Zgk, Xgp, AOBasis, System, ExternalOrdering, V_extao) 
             !
             ! Compute the Fock matrix, F, using THC-decomposed Coulomb integrals
             !
@@ -282,26 +282,39 @@ contains
             ! ExternalOrdering
             !              Ordering of the AO funtions in the external program
             !
-            real(F64), dimension(:, :), intent(out) :: Fij
-            real(F64), dimension(:, :), intent(out) :: Fvw
-            real(F64), dimension(:, :), intent(in)  :: Cpi_extao
-            real(F64), dimension(:, :), intent(in)  :: Cpa_extao
-            real(F64), dimension(:, :), intent(in)  :: Cpv_extao
-            real(F64), dimension(:), intent(in )    :: OccNum
-            real(F64), dimension(:, :), intent(in)  :: Zgk
-            real(F64), dimension(:, :), intent(in)  :: Xgp
-            type(TAOBasis), intent(in)              :: AOBasis
-            type(TSystem), intent(in)               :: System
-            integer, intent(in)                     :: ExternalOrdering
-
+            ! V_extao
+            !              External single-electron potential expressed in the AO
+            !              basis of the external program. If present, will be used
+            !              as the single-electron part of the Fock hamiltonian instead
+            !              of the kinetic and nuclei-electrons interaction matrices.
+            !              Both upper and lower triangle of V_extao are referenced.
+            !
+            real(F64), dimension(:, :), intent(out)           :: Fij
+            real(F64), dimension(:, :), intent(out)           :: Fvw
+            real(F64), dimension(:, :), intent(in)            :: Cpi_extao
+            real(F64), dimension(:, :), intent(in)            :: Cpa_extao
+            real(F64), dimension(:, :), intent(in)            :: Cpv_extao
+            real(F64), dimension(:), intent(in )              :: OccNum
+            real(F64), dimension(:, :), intent(in)            :: Zgk
+            real(F64), dimension(:, :), intent(in)            :: Xgp
+            type(TAOBasis), intent(in)                        :: AOBasis
+            type(TSystem), intent(in)                         :: System
+            integer, intent(in)                               :: ExternalOrdering
+            real(F64), dimension(:, :), intent(in), optional  :: V_extao
+            
             integer :: NOccupied, NActive, NInactive, NVirtual, NMO, NAO, NGridTHC
             integer :: i0, i1, a0, a1, k
             real(F64), dimension(:, :), allocatable :: Cpi, Cpv
+            real(F64), dimension(:, :), allocatable :: Vpq
             real(F64), dimension(:, :, :), allocatable :: Fpq, Cpo
             real(F64), dimension(:, :), allocatable :: Zgh
             real(F64), dimension(:, :), allocatable :: Fpi, Fpv
+            logical, parameter :: CoulContrib = .true.
+            logical, parameter :: ExchContrib = .true.
+            real(F64), parameter :: KScal = ONE       
             real(F64) :: Nk
             integer, dimension(2) :: NOcc
+            integer :: s, Nspins
             type(TClock) :: timer
             
             call clock_start(timer)
@@ -353,7 +366,19 @@ contains
             call real_abT(Zgh, Zgk, Zgk)
             NOcc(1) = NOccupied
             NOcc(2) = 0
-            call thc_Fock_F(Fpq, Cpo, NOcc, Zgh, Xgp, AOBasis, System)
+            if (present(V_extao)) then
+                  call thc_Fock_JK(Fpq, Cpo, Zgh, Xgp, NOcc, CoulContrib, ExchContrib, KScal)
+                  allocate(Vpq(NAO, NAO))
+                  call auto2e_interface_V(Vpq, V_extao, AOBasis, ExternalOrdering)
+                  NSpins = size(Cpo, dim=3)          
+                  do s = 1, NSpins
+                        if (NOcc(s) > 0) then                                            
+                              Fpq(:, :, s) = Fpq(:, :, s) + Vpq(:, :)    
+                        end if
+                  end do
+            else
+                  call thc_Fock_F(Fpq, Cpo, NOcc, Zgh, Xgp, AOBasis, System)
+            end if
             call real_ab(Fpi, Fpq(:, :, 1), Cpi)
             call real_aTb(Fij, Cpi, Fpi)
             call real_ab(Fpv, Fpq(:, :, 1), Cpv)
