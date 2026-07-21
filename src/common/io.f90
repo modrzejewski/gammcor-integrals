@@ -16,7 +16,24 @@ module io
       !
       integer, parameter :: IO_MAX_MSGLEN = 256
 
+      !
+      ! The character used by the operating system
+      ! to separate pathname components.
+      !
+      character(len=1) :: DIRSEP = "/"
+
 contains
+
+      function io_exists(s)
+            !
+            ! Check if the file referenced by S exists.
+            !
+            logical :: io_exists
+            character(*), intent(in) :: s
+            
+            inquire(file=s, exist=io_exists)
+      end function io_exists
+
 
       function io_size_byte_rank1_F64(a)
             !
