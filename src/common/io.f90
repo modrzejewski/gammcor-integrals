@@ -1,6 +1,7 @@
 module io
       use arithmetic
       use display
+      use string
 
       implicit none
 
@@ -137,4 +138,61 @@ contains
                   end if
             end do lineloop
       end subroutine io_text_readline
+
+
+      subroutine io_text_write(a, filename)
+            !
+            ! Save a matrix of floating-point numbers into a text file.
+            ! An appropriate format is chosen to retain the full precision
+            ! of the input. Use this subroutine to write portable, human-
+            ! readable files. Use IO_BINARY_WRITE if the data need not be
+            ! read on other machines.
+            !
+            real(F64), dimension(:, :), intent(in) :: a
+            character(*), intent(in)           :: filename
+
+            integer :: u
+            integer :: m, n
+            integer :: i, j
+            character(:), allocatable :: fmt
+
+            u = io_text_open(filename, "REPLACE")
+            m = size(a, dim=1)
+            n = size(a, dim=2)
+            !
+            ! ({N}(ES{F64_ES_W}.{F64_ES_D}E{F64_ES_E},:,1X))
+            !
+            fmt = "(" // str(n) // "(ES" // str(F64_ES_W) // "." // &
+                  str(F64_ES_D) // "E" // str(F64_ES_E) // ",:,1X))"
+
+            do i = 1, m
+                  write(u, fmt) (a(i, j), j = 1, n)
+            end do
+
+            close(u)
+      end subroutine io_text_write
+
+
+      subroutine io_text_read(a, filename)
+            !
+            ! Read a matrix of floating-point numbers from a text file.
+            ! See the comments for IO_TEXT_WRITE.
+            !
+            real(F64), dimension(:, :), intent(out) :: a
+            character(*), intent(in)            :: filename
+
+            integer :: u
+            integer :: m, n
+            integer :: i, j
+
+            u = io_text_open(filename, "OLD")
+            m = size(a, dim=1)
+            n = size(a, dim=2)
+
+            do i = 1, m
+                  read(u, *) (a(i, j), j = 1, n)
+            end do
+
+            close(u)
+      end subroutine io_text_read
 end module io
