@@ -79,8 +79,8 @@ def remove_files(RelSrcPath):
 #
 BatchList = []
 BatchList.append(["src/common/arithmetic.f90"])
-BatchList.append(["src/common/math_constants.f90",
-                  "src/common/specf.f90"])
+BatchList.append(["src/common/math_constants.f90"])
+BatchList.append(["src/common/specf.f90"])
 BatchList.append(["src/common/string.f90"])
 BatchList.append(["src/common/clock.f90"])
 BatchList.append(["src/common/display.f90"])
