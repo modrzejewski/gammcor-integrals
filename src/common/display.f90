@@ -97,7 +97,7 @@ contains
       end subroutine geprn
 
       
-      subroutine imsg(s, i, priority)
+      subroutine imsg(s, i, priority, width)
             ! --------------------------------------------------------
             ! Display a label-number message in the two-column format:
             ! DESCRIPTION_STRING  INTEGER_NUMBER
@@ -107,34 +107,34 @@ contains
             character(len=*), intent(in) :: s
             integer, intent(in)          :: i
             integer, optional            :: priority
+            integer, optional, intent(in):: width
            
-            integer, parameter :: firstcol_max_len = 40
+            integer :: max_len, p
             character(:), allocatable :: label
-            character(firstcol_max_len) :: label0
-            integer :: p
+
+            if (present(width)) then
+                  max_len = width
+            else
+                  max_len = 40
+            end if
 
             if (present(priority)) then
                   p = priority
             else
                   p = MSG_NORMAL
             end if
-            if (this_image() == 1 .or. p > MSG_NORMAL) then
-                  if (p >= MSG_PRIORITY_THRESH) then
-                        label = trim(adjustl(s))
-                        if (len(label) < firstcol_max_len) then
-                              label0 = label
-                              write(STDOUNIT, "(1X,A,I0)") label0, i
-                        else
-                              write(STDOUNIT, "(1X,A)") label // " ..."
-                              write(STDOUNIT, "(1X,I0)") i
-                        end if
-                        flush(STDOUNIT)
-                  end if
+
+            label = s
+            if (len_trim(label) <= max_len) then
+                  call msg(lfield(label, max_len) // str(i), priority=p)
+            else
+                  call msg(trim(label) // " ...", priority=p)
+                  call msg(str(i), priority=p)
             end if
       end subroutine imsg
 
 
-      subroutine dmsg(s, d, fmt, priority)
+      subroutine dmsg(s, d, fmt, priority, width)
             ! ------------------------------------------
             ! Display "nubmer of ..." message:
             ! call imsg("NUBER OF A", 20.d+0)
@@ -144,32 +144,33 @@ contains
             real(F64), intent(in)                  :: d
             character(len=*), optional, intent(in) :: fmt
             integer, optional                      :: priority
+            integer, optional, intent(in)          :: width
 
-            character(len=40) :: title
             character(len=20) :: strd
-            integer :: p
+            integer :: w, p
+
+            if (present(width)) then
+                  w = width
+            else
+                  w = 40
+            end if
 
             if (present(priority)) then
                   p = priority
             else
                   p = MSG_NORMAL
             end if
-            if (this_image() == 1 .or. p > MSG_NORMAL) then
-                  if (p >= MSG_PRIORITY_THRESH) then
-                        write(title, "(A)") trim(s)
-                        if (present(fmt)) then
-                              write(strd, "("//trim(fmt)//")") d
-                              write(STDOUNIT, "(1X,A40,A)") adjustl(title), adjustl(strd)
-                        else
-                              write(STDOUNIT, "(1X,A40,F20.12)") adjustl(title), d
-                        end if
-                        flush(STDOUNIT)
-                  end if
+
+            if (present(fmt)) then
+                  write(strd, "("//trim(fmt)//")") d
+            else
+                  write(strd, "(F20.12)") d
             end if
+            call msg(lfield(s, w) // adjustl(strd), priority=p)
       end subroutine dmsg 
 
 
-      subroutine smsg(s1, s2, priority)
+      subroutine smsg(s1, s2, priority, width)
             ! ------------------------------------------
             ! Display "nubmer of ..." message:
             ! call imsg("NUBER OF A", 20.d+0)
@@ -177,22 +178,23 @@ contains
             !
             character(len=*), intent(in) :: s1, s2
             integer, optional            :: priority
+            integer, optional, intent(in):: width
 
-            character(len=40) :: title
-            integer :: p
+            integer :: w, p
+
+            if (present(width)) then
+                  w = width
+            else
+                  w = 40
+            end if
 
             if (present(priority)) then
                   p = priority
             else
                   p = MSG_NORMAL
             end if
-            if (this_image() == 1 .or. p > MSG_NORMAL) then
-                  if (p >= MSG_PRIORITY_THRESH) then
-                        write(title, "(A)") trim(s1)
-                        write(STDOUNIT, "(1X,A40,A)") adjustl(title), adjustl(s2)
-                        flush(STDOUNIT)
-                  end if
-            end if
+
+            call msg(lfield(s1, w) // adjustl(s2), priority=p)
       end subroutine smsg 
 
 
@@ -316,4 +318,67 @@ contains
                   end if
             end if
       end subroutine blankline
+
+
+      subroutine dotted_separator(n, priority)
+            integer, intent(in) :: n
+            integer, optional, intent(in) :: priority
+
+            integer :: p
+            character(:), allocatable :: s
+
+            if (present(priority)) then
+                  p = priority
+            else
+                  p = MSG_NORMAL
+            end if
+            if (this_image() == 1 .or. p > MSG_NORMAL) then
+                  if (p >= MSG_PRIORITY_THRESH) then
+                        s = repeat(". ", n / 2 + 1)
+                        write(STDOUNIT, "(1X,A)") s(1:n)
+                  end if
+            end if
+      end subroutine dotted_separator
+
+
+      subroutine framed(text, padding, priority)
+            character(len=*), intent(in)  :: text
+            integer, optional, intent(in) :: padding
+            integer, optional, intent(in) :: priority
+
+            integer :: p, pad, int_width, text_len, total_pad, l_pad, r_pad
+            character(:), allocatable :: hline, out_line
+
+            if (present(priority)) then
+                  p = priority
+            else
+                  p = MSG_NORMAL
+            end if
+
+            if (present(padding)) then
+                  pad = padding
+            else
+                  pad = 10
+            end if
+
+            if (this_image() == 1 .or. p > MSG_NORMAL) then
+                  if (p >= MSG_PRIORITY_THRESH) then
+                        text_len = len_trim(text)
+                        int_width = text_len + pad * 2
+                        
+                        hline = repeat("─", int_width)
+                        
+                        write(STDOUNIT, "(1X,A)") "┌" // hline // "┐"
+                        
+                        total_pad = int_width - text_len
+                        l_pad = total_pad / 2
+                        r_pad = total_pad - l_pad
+                        out_line = "│" // repeat(" ", l_pad) // trim(text) // repeat(" ", r_pad) // "│"
+                        
+                        write(STDOUNIT, "(1X,A)") out_line
+                        write(STDOUNIT, "(1X,A)") "└" // hline // "┘"
+                        flush(STDOUNIT)
+                  end if
+            end if
+      end subroutine framed
 end module display

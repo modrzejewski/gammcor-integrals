@@ -80,11 +80,12 @@ def remove_files(RelSrcPath):
 BatchList = []
 BatchList.append(["src/common/arithmetic.f90"])
 BatchList.append(["src/common/math_constants.f90"])
+BatchList.append(["src/common/specf.f90"])
 BatchList.append(["src/common/string.f90"])
 BatchList.append(["src/common/clock.f90"])
 BatchList.append(["src/common/display.f90"])
 BatchList.append(["src/common/io.f90",
-                  "src/integrals/spherh.f90"])
+                  "src/basis/spherh.f90"])
 BatchList.append(["src/integrals/chebinterp.f90"])
 BatchList.append(["src/integrals/boys.f90"])
 BatchList.append(["src/integrals/grid/grid_definitions.f90",
@@ -386,16 +387,17 @@ BatchList.append(["src/integrals/Auto2e/src/auto2e_eri_dddd.f90",
 "src/integrals/Auto2e/src/auto2e_eri_psss.f90", 
 "src/integrals/Auto2e/src/auto2e_eri_ssss.f90"])
 BatchList.append(["src/integrals/Auto2e/src/auto2e.f90"])
-BatchList.append(["src/integrals/sphergto.f90",
+BatchList.append(["src/basis/sphergto.f90",
                   "src/common/periodic.f90",
                   "src/common/sort.f90"])
 BatchList.append(["src/common/sys_definitions.f90",
                   "src/integrals/Cholesky/chol_definitions.f90",
                   "src/integrals/Cholesky/TwoStepCholesky_definitions.f90"])
-BatchList.append(["src/integrals/basis_sets.f90"])
+BatchList.append(["src/linear-algebra/real_linalg.f90"])
+BatchList.append(["src/basis/basis_definitions.f90"])
+BatchList.append(["src/basis/basis_sets.f90"])
 BatchList.append(["src/integrals/Cholesky/sorter_Cholesky.f90"])
-BatchList.append(["src/Main/linalg.f90",
-                  "src/linear-algebra/real_linalg.f90"])
+BatchList.append(["src/Main/linalg.f90"])
 BatchList.append(["src/integrals/Cholesky/TwoStepCholesky_Step1.f90",
                   "src/integrals/Cholesky/TwoStepCholesky_Step2.f90"])
 BatchList.append(["src/integrals/Cholesky/TwoStepCholesky.f90"])
