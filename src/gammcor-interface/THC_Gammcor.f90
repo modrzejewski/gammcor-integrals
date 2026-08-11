@@ -3,6 +3,7 @@ module THC_Gammcor
       use thc_definitions
       use sys_definitions
       use basis_sets
+      use basis_definitions
       use display
       use boys
       use Auto2e
@@ -22,7 +23,7 @@ module THC_Gammcor
 contains
 
       subroutine thc_gammcor_Rkab(Rkab, CA, a0, a1, CB, b0, b1, BasisSetPath, XYZPath, Accuracy, &
-            SpherAO, ExternalOrdering, SortAngularMomenta, Units)
+            ExternalOrdering, SortAngularMomenta, Units)
 
             real(F64), dimension(:, :), allocatable, intent(out) :: Rkab
             real(F64), dimension(:, :), intent(in)               :: CA
@@ -32,7 +33,6 @@ contains
             character(*), intent(in)                             :: BasisSetPath
             character(*), intent(in)                             :: XYZPath
             integer, intent(in)                                  :: Accuracy
-            logical, intent(in)                                  :: SpherAO
             integer, intent(in)                                  :: ExternalOrdering
             logical, intent(in)                                  :: SortAngularMomenta
             integer, intent(in)                                  :: Units
@@ -43,6 +43,7 @@ contains
             real(F64), dimension(:, :), allocatable :: Xga, Xgb            
             integer :: NGridTHC, NCholesky, NA, NB
             integer :: NAO
+            integer :: ShellOrder
             !
             ! Read the XYZ coordinates and atom types
             !
@@ -51,7 +52,14 @@ contains
             ! Read the basis set parameters from an EMSL text file
             ! (GAMESS-US format, no need for any edits, just download it straight from the website)
             !
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+            if (SortAngularMomenta) then
+               ShellOrder = SHELL_ORDER_BY_MOMENTUM
+            else
+               ShellOrder = SHELL_ORDER_FIXED
+            end if
+            call basis_Init(AOBasis, System, &
+                            FilePath=BasisSetPath, &
+                            ShellOrder=ShellOrder)
             if (AOBasis%SpherAO) then
                   NAO = AOBasis%NAOSpher
             else

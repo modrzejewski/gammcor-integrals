@@ -72,7 +72,7 @@ contains
 
          Rule = BasisAssign%get_atom_rule(a, Z)
          PathToParams = Rule%PathToParams
-         
+
          if (Rule%GuessAvailable) then
             PathToGuessDir = Rule%PathToGuessDir
             PathToGuess = PathToGuessDir // trim(lowercase(elname_short(Z))) // ".txt"
@@ -180,7 +180,7 @@ contains
    end subroutine basis_AtomicRhoGuess
 
 
-   subroutine basis_NewAOBasis(AOBasis, System, FilePath, SpherAO, SortAngularMomenta, BasisAssign)
+   subroutine basis_Init(AOBasis, System, FilePath, SpherAO, ShellOrder, BasisAssign)
       !
       ! Create a new instance of a user-defined type which encapsulates all necessary
       ! basis-set data used to calculate integrals in the selected Gaussian-type
@@ -209,8 +209,8 @@ contains
       !   SpherAO              (Optional) Logical flag indicating if spherical harmonics
       !                        are used (default: .true.).
       !
-      !   SortAngularMomenta   (Optional) Logical flag to sort shells by angular momenta
-      !                        instead of radii.
+      !   ShellOrder           (Optional) Mode of shell ordering (see basis_definitions).
+      !                        Defaults to SHELL_ORDER_BY_RADIUS.
       !
       !   BasisAssign          (Optional) TBasisAssignment object that provides a detailed
       !                        basis set-to-atom map. Either FilePath or BasisAssign
@@ -220,7 +220,7 @@ contains
       type(TSystem), intent(in)                    :: System
       character(*), intent(in), optional           :: FilePath
       logical, intent(in), optional                :: SpherAO
-      logical, optional, intent(in)                :: SortAngularMomenta
+      integer, optional, intent(in)                :: ShellOrder
       type(TBasisAssignment), intent(in), optional :: BasisAssign
 
       type(TBasisConfig), allocatable :: Configs(:)
@@ -239,17 +239,17 @@ contains
       integer, dimension(:), allocatable :: S
       real(F64), dimension(:), allocatable :: W, R2Max
       real(F64), dimension(:, :), allocatable :: CntrCoeffs, Exponents, NormFactorsCart
-      logical :: SortRadii
+      integer :: Order
       logical :: Spherical
       type(TBasisRule)       :: ResolvedRule
       type(TBasisAssignment) :: Assignment
 
       if (present(FilePath) .and. present(BasisAssign)) then
-         call msg("basis_NewAOBasis: FilePath and BasisAssign cannot be provided simultaneously.", MSG_ERROR)
+         call msg("basis_Init: FilePath and BasisAssign cannot be provided simultaneously.", MSG_ERROR)
          error stop
       end if
       if (.not. present(FilePath) .and. .not. present(BasisAssign)) then
-         call msg("basis_NewAOBasis: At least one of FilePath or BasisAssign must be provided", MSG_ERROR)
+         call msg("basis_Init: At least one of FilePath or BasisAssign must be provided", MSG_ERROR)
          error stop
       end if
 
@@ -267,10 +267,10 @@ contains
          Spherical = .true.
       end if
 
-      if (present(SortAngularMomenta)) then
-         SortRadii = (.not. SortAngularMomenta)
+      if (present(ShellOrder)) then
+         Order = ShellOrder
       else
-         SortRadii = .true.
+         Order = SHELL_ORDER_BY_RADIUS
       end if
       !
       ! 1. Group Unique Blocks by (Z, PathToParams) & Determine Paths
@@ -313,7 +313,8 @@ contains
       allocate(NormFactorsCart(MaxNAngFuncCart, NShellParamsTotal))
       call basis_NormalizeCntrCoeffs(NormFactorsCart, CntrCoeffs, &
          Exponents, NPrimitives, ShellMomentum)
-      if (SortRadii) then
+      select case(Order)
+       case(SHELL_ORDER_BY_RADIUS)
          !
          ! Compute the radii (R2MAX) beyond which the absolute values of atomic orbitals
          ! fall below some small value, e.g., eps~10**(-12). The shells within each atom
@@ -346,7 +347,7 @@ contains
             W(1:n) = -R2Max(p0:p1)
             call dsort(W(1:n), S(p0:p1), n)
          end do
-      else
+       case(SHELL_ORDER_BY_MOMENTUM)
          !
          ! Sort shells within each atom according to increasing angular momentum.
          ! This will disable the computation of orbitals spatial extent (R2Max)
@@ -371,7 +372,17 @@ contains
                end do
             end do
          end do
-      end if
+       case(SHELL_ORDER_FIXED)
+         allocate(R2Max(NShellParamsTotal))
+         R2Max = huge(ONE)
+         allocate(S(NShellParamsTotal))
+         do p = 1, NShellParamsTotal
+            S(p) = p
+         end do
+       case default
+         call msg("basis_Init: Invalid ShellOrder value.", MSG_ERROR)
+         error stop
+      end select
       !
       ! Assign shells to each atom in the system
       !
@@ -396,10 +407,10 @@ contains
          ShellCenters(q0:q1) = a
          q = q + n
       end do
-      call basis_NewAOBasis_2(AOBasis, System%AtomCoords, ShellCenters, ShellParamsIdx, ShellMomentum, &
+      call basis_Init_2(AOBasis, System%AtomCoords, ShellCenters, ShellParamsIdx, ShellMomentum, &
          NPrimitives, CntrCoeffs, Exponents, NormFactorsCart, R2Max, Spherical)
       AOBasis%Assignment = Assignment
-   end subroutine basis_NewAOBasis
+   end subroutine basis_Init
 
 
    function basis_Ang2Int(Momentum)
@@ -645,7 +656,7 @@ contains
    end subroutine basis_ReadElementData
 
 
-   subroutine basis_NewAOBasis_2(AOBasis, AtomCoords, ShellCenters, ShellParamsIdx, ShellMomentum, &
+   subroutine basis_Init_2(AOBasis, AtomCoords, ShellCenters, ShellParamsIdx, ShellMomentum, &
       NPrimitives, CntrCoeffs, Exponents, NormFactorsCart, R2Max, SpherAO)
 
       type(TAOBasis), intent(out)                :: AOBasis
@@ -809,7 +820,7 @@ contains
             end do
          end do
       end associate
-   end subroutine basis_NewAOBasis_2
+   end subroutine basis_Init_2
 
 
    subroutine basis_CountOrbitals(NAOSpher, NAOCart, NAngFuncSpher, NAngFuncCart, &
@@ -1130,7 +1141,7 @@ contains
       ShellCenters(1:Ma) = AOBasisA%ShellCenters(1:Ma)
       ShellCenters(Ma+1:Ma+Mb) = AOBasisB%ShellCenters(1:Mb)
 
-      call basis_NewAOBasis_2(AOBasisAB, System%AtomCoords, ShellCenters, ShellParamsIdx, ShellMomentum, &
+      call basis_Init_2(AOBasisAB, System%AtomCoords, ShellCenters, ShellParamsIdx, ShellMomentum, &
          NPrimitives, CntrCoeffs, Exponents, NormFactorsCart, R2Max, SpherAO)
       AOBasisAB%Fused = .true.
       !

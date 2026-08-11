@@ -1,6 +1,7 @@
 program test
       use sorter_Cholesky
       use basis_sets
+      use basis_definitions
       use sys_definitions
       use chol_definitions
       use arithmetic
@@ -92,11 +93,20 @@ contains
             integer :: NAO
             logical, parameter :: SpherAO = .true.
             logical, parameter :: SortAngularMomenta = .false.
+            integer :: ShellOrder
             
             
             call auto2e_init()
             call sys_Read_XYZ(System, XYZPath, Units)
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            if (SortAngularMomenta) then
+               ShellOrder = SHELL_ORDER_BY_MOMENTUM
+            else
+               ShellOrder = SHELL_ORDER_FIXED
+            end if
+            call basis_Init(AOBasis, System, &
+                            FilePath=BasisSetPath, &
+                            ShellOrder=ShellOrder)
 
             NAOSpher = AOBasis%NAOSpher
             NAOCart = AOBasis%NAOCart
@@ -151,11 +161,20 @@ contains
             integer :: NAO
             logical, parameter :: SpherAO = .true.
             logical, parameter :: SortAngularMomenta = .false.
+            integer :: ShellOrder
             
             
             call auto2e_init()
             call sys_Read_XYZ(System, XYZPath, Units)
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            if (SortAngularMomenta) then
+               ShellOrder = SHELL_ORDER_BY_MOMENTUM
+            else
+               ShellOrder = SHELL_ORDER_FIXED
+            end if
+            call basis_Init(AOBasis, System, &
+                            FilePath=BasisSetPath, &
+                            ShellOrder=ShellOrder)
 
             NAOSpher = AOBasis%NAOSpher
             NAOCart = AOBasis%NAOCart
@@ -279,7 +298,7 @@ contains
                   RawIntegralsPath, AOSource, BasisSetPath, XYZPath, Accuracy, SpherAO, ExternalOrdering, &
                   SortAngularMomenta, Units)
 
-            call thc_gammcor_Rkab(RkabTHC, CAONO, a0, a1, CAONO, b0, b1, BasisSetPath, XYZPath, Accuracy, SpherAO, &
+            call thc_gammcor_Rkab(RkabTHC, CAONO, a0, a1, CAONO, b0, b1, BasisSetPath, XYZPath, Accuracy, &
                   ExternalOrdering, SortAngularMomenta, Units)
 
             call msg("------------- checking Cholesky binary vs Cholesky on the fly ----------------------")            
@@ -352,6 +371,7 @@ contains
             integer :: NAO
             logical, parameter :: SpherAO = .true.
             logical, parameter :: SortAngularMomenta = .false.
+            integer :: ShellOrder
             
             
             call auto2e_init()
@@ -361,7 +381,15 @@ contains
             !
             call boys_init(4 * AUTO2E_MAXL)
             call sys_Read_XYZ(System, XYZPath, Units)
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            if (SortAngularMomenta) then
+               ShellOrder = SHELL_ORDER_BY_MOMENTUM
+            else
+               ShellOrder = SHELL_ORDER_FIXED
+            end if
+            call basis_Init(AOBasis, System, &
+                            FilePath=BasisSetPath, &
+                            ShellOrder=ShellOrder)
 
             NAOSpher = AOBasis%NAOSpher
             NAOCart = AOBasis%NAOCart
@@ -473,10 +501,19 @@ contains
             real(F64), dimension(:), allocatable :: OccNumbers
             real(F64), dimension(:, :), allocatable :: Rho
             integer :: k
+            integer :: ShellOrder
                         
             call auto2e_init()
             call sys_Read_XYZ(System, XYZPath, Units)
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            if (SortAngularMomenta) then
+               ShellOrder = SHELL_ORDER_BY_MOMENTUM
+            else
+               ShellOrder = SHELL_ORDER_FIXED
+            end if
+            call basis_Init(AOBasis, System, &
+                            FilePath=BasisSetPath, &
+                            ShellOrder=ShellOrder)
             if (AOBasis%SpherAO) then
                   NAO = AOBasis%NAOSpher
             else
@@ -566,6 +603,7 @@ contains
             type(TSystem) :: System
             integer :: NCholesky, NA, NB
             integer :: NAO
+            integer :: ShellOrder
             !
             ! Read the XYZ coordinates and atom types
             !
@@ -574,7 +612,15 @@ contains
             ! Read the basis set parameters from an EMSL text file
             ! (GAMESS-US format, no need for any edits, just download it straight from the website)
             !
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            if (SortAngularMomenta) then
+               ShellOrder = SHELL_ORDER_BY_MOMENTUM
+            else
+               ShellOrder = SHELL_ORDER_FIXED
+            end if
+            call basis_Init(AOBasis, System, &
+                            FilePath=BasisSetPath, &
+                            ShellOrder=ShellOrder)
             if (AOBasis%SpherAO) then
                   NAO = AOBasis%NAOSpher
             else
@@ -636,6 +682,7 @@ contains
             real(F64), dimension(:, :), allocatable :: Dx, Dy, Dz, Dx_extao, Dy_extao, Dz_extao
             integer :: NAO
             logical, parameter :: SortAngularMomenta = .false.
+            integer :: ShellOrder
 
             call auto2e_init()
             !
@@ -644,7 +691,15 @@ contains
             !
             call boys_init(4 * AUTO2E_MAXL)
             call sys_Read_XYZ(System, XYZPath, SYS_UNITS_ANGSTROM)
-            call basis_NewAOBasis(AOBasis, System, BasisSetPath, SpherAO, SortAngularMomenta)
+
+            if (SortAngularMomenta) then
+               ShellOrder = SHELL_ORDER_BY_MOMENTUM
+            else
+               ShellOrder = SHELL_ORDER_FIXED
+            end if
+            call basis_Init(AOBasis, System, &
+                            FilePath=BasisSetPath, &
+                            ShellOrder=ShellOrder)
             NAO = AOBasis%NAOSpher
 
             !

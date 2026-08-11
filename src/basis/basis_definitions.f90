@@ -7,6 +7,19 @@ module basis_definitions
 
    implicit none
 
+   !
+   ! Order orbital shells by their effective orbital radius
+   !
+   integer, parameter :: SHELL_ORDER_BY_RADIUS = 0
+   !
+   ! Order orbital shells by their angular momentum
+   !
+   integer, parameter :: SHELL_ORDER_BY_MOMENTUM = 1
+   !
+   ! Keep the original order of shells as defined in the basis set parameters file
+   !
+   integer, parameter :: SHELL_ORDER_FIXED = 2
+
    type TBasisRule
       !
       ! Atom index, element atomic number,
