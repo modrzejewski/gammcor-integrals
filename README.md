@@ -4,30 +4,40 @@ Molecular integrals library for the Gammcor code of Pernal et al.:
 * AO->MO transformation,
 * interfaces for converting AO indices between Gammcor and external programs.
 
-The build script of gammcor-cholesky generates static library `cholesky.a`, which should be linked to Gammcor's main binary file.
+The build system generates static library `lib/cholesky.a` and Fortran header files (`.mod`) in `./include`, which should be linked and included in Gammcor's build.
 
 ## Installation
-#### 1. Clone the repository
-```
+
+### 1. Clone the repository
+```bash
 git clone git@github.com:modrzejewski/gammcor-integrals.git
+cd gammcor-integrals
 ```
 
-#### 2. Compile static library file
-The compilation is done by running `Build.py` followed by two arguments:
-* `-np` The number of concurrent processes used during compilation. Parallelization saves lots of build time if automatically generated ERI subroutines are compiled.
-* `CompilerFlags` Name of the compiler and linker commands set. There are ready to use predefined sets in `./CompilerFlags/`. Just pick one of the subdirectory names, e.g., `ifort-gammcor`. User can create new subdirectories with custom params.
-
-#### 3. Example: build using Intel and four concurrent compilation processes
-
-```
-cd <repository_name>
-./Build.py -np 4 ifort-gammcor
+### 2. Setup the build directory with a chosen compiler profile
+The compiler flags are configured using profile files located in `.meson/profiles/`. For example:
+```bash
+meson setup build --native-file .meson/profiles/ifx-gammcor.ini
 ```
 
-The build script generates static library file `./lib/cholesky.a`. This file should be linked with the main gammcor program. Fortran header files (`.mod`) are stored in `./include`. The mod files directory should be added to the include path of Gammcor.
+See `.meson/profiles/` for all available profile configurations (e.g., debug builds, 64-bit integer, alternative architectures).
+
+### 3. Compile the project
+```bash
+cd build
+meson compile -j 4
+```
+Using a parallel build (e.g., `-j 4`) is highly recommended. It significantly speeds up compilation of the automatically generated ERI subroutines.
+
+The build process generates:
+* Static library file: `./lib/cholesky.a`
+* Fortran module files (`.mod`): `./include/`
+* Test binary: `./test`
+
+
+---
 
 ## Contributors
 * Marcin Modrzejewski
 * Michał Hapka
 * Aleksandra Tucholska
----
