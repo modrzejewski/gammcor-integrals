@@ -10,3 +10,6 @@ __pycache__/
 *.~4~
 #*#
 .#*
+/CompilerFlags/ifx-gammcor-ola/
+/test
+/lib/
