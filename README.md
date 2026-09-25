@@ -17,10 +17,10 @@ cd gammcor-integrals
 ### 2. Setup the build directory with a chosen compiler profile
 The compiler flags are configured using profile files located in `.meson/profiles/`. For example:
 ```bash
-meson setup build --native-file .meson/profiles/ifx-gammcor.ini
+meson setup build --native-file .meson/profiles/ifx.ini
 ```
 
-See `.meson/profiles/` for all available profile configurations (e.g., debug builds, 64-bit integer, alternative architectures).
+Profiles: `ifx.ini` (release) and `ifx-debug.ini`. The CPU target is detected at setup (`-Dcpu=auto`); it can be set with `-Dcpu=avx512`, `avx512-amd`, `avx2`, `native` or `dispatch`.
 
 ### 3. Compile the project
 ```bash
