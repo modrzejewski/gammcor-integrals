@@ -446,7 +446,7 @@ contains
                         end if
                         if (lyA+lyB >= 2) then
                               EyAB_1 = EyAB(y0+1)
-                              EyAB_2 = EyAB(y0+1)
+                              EyAB_2 = EyAB(y0+2)
                         else if (lyA+lyB == 1) then
                               EyAB_1 = EyAB(y0+1)
                               EyAB_2 = ZERO

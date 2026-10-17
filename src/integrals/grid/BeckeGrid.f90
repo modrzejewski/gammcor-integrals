@@ -572,7 +572,7 @@ contains
             integer, intent(in)               :: Z
             
             integer :: row
-            real(F64) :: AtomicRadius, R0
+            real(F64) :: AtomicRadius
             real(F64) :: r1, r2, r3, r4
             logical :: sg1avail
             !
@@ -603,7 +603,6 @@ contains
                   ]
 
             AtomicRadius = ATOMIC_RADII(Z)
-            R0 = Rk / AtomicRadius
             row = periodic_table_row(Z)
             if (row+1 > size(sg1_alpha1)) then
                   sg1avail = .false.
@@ -615,13 +614,13 @@ contains
                   r2 = sg1_alpha2(row) * AtomicRadius
                   r3 = sg1_alpha3(row) * AtomicRadius
                   r4 = sg1_alpha4(row) * AtomicRadius
-                  if (R0 <= r1) then
+                  if (Rk <= r1) then
                         LebedevIdxK = LebedevIdx(1)
-                  else if (R0 <= r2) then
+                  else if (Rk <= r2) then
                         LebedevIdxK = LebedevIdx(2)
-                  else if (R0 <= r3) then
+                  else if (Rk <= r3) then
                         LebedevIdxK = LebedevIdx(3)
-                  else if (R0 <= r4) then
+                  else if (Rk <= r4) then
                         LebedevIdxK = LebedevIdx(4)
                   else
                         LebedevIdxK = LebedevIdx(5)
