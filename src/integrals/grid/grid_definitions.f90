@@ -56,7 +56,7 @@ module grid_definitions
    integer, dimension(5), parameter :: BECKE_PARAMS_SG1_LebedevL = [3, 9, 15, 23, 15]
    !
    ! -------------------------- MEDIUM  ----------------------------
-   ! EULER-MACLAURIN / LEBEDEV (96; 14, 74, 302, 146, 302)
+   ! EULER-MACLAURIN / LEBEDEV (96; 14, 86, 146, 302, 146)
    !
    integer, parameter :: BECKE_PARAMS_MEDIUM_NRadial    = 96
    integer, dimension(5), parameter :: BECKE_PARAMS_MEDIUM_LebedevIdx = [2, 7, 9, 14, 9]
@@ -70,7 +70,7 @@ module grid_definitions
    integer, dimension(5), parameter :: BECKE_PARAMS_FINE_LebedevL   = [7, 19, 29, 41, 29]
    !
    ! ------------------------ EXTRA FINE ---------------------------
-   ! EULER-MACLAURIN / LEBEDEV (250; 38, 230, 590, 1202, 590)
+   ! EULER-MACLAURIN / LEBEDEV (250; 38, 302, 590, 1202, 590)
    !
    integer, parameter :: BECKE_PARAMS_XFINE_NRadial     = 250
    integer, dimension(5), parameter :: BECKE_PARAMS_XFINE_LebedevIdx = [4, 14, 17, 20, 17]
