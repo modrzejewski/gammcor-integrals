@@ -24,26 +24,26 @@ module Auto2eInterface
       ! Ordering of solid harmonics in Orca
       ! --------------------------------------------------------------------------------------
       !                                                                  s
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_S = [0, (-1, k=1,10)] + 1
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_S = [0, (-1, k=1,12)] + 1
       !
       ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
       ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
       ! is the same as in Molpro, but different from Orca's. 
       !                                                                  pz px  py
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_P = [3, 1, 2, (0,k=1,8)]
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_P = [3, 1, 2, (0,k=1,10)]
       !                                                                  d0  d1+  d1- d2+  d2-
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_D = [0,  1,   -1,  2,   -2,  (-3,k=1,6)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_D = [0,  1,   -1,  2,   -2,  (-3,k=1,8)] + 3
       !                                                                 f0  f1+  f1-  f2+ f2-  f3+ f3-
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_F = [0,  1,   -1,   2,  -2,  3,  -3, (-4,k=1,4)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_F = [0,  1,   -1,   2,  -2,  3,  -3, (-4,k=1,6)] + 4
       !                                                                  g0  g1+  g1-  g2+  g2-  g3+  g3- g4+   g4-
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_G = [0,  1,   -1,  2,   -2,  3,   -3,  4,   -4, (-5,k=1,2)] + 5            
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_G = [0,  1,   -1,  2,   -2,  3,   -3,  4,   -4, (-5,k=1,4)] + 5            
       !                                                                  h0   h1+  h1-  h2+  h2-  h3+  h3-  h4+  h4-  h5+  h5-
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_H = [0,   1,  -1,   2,   -2,  3,   -3,  4,   -4,  5,   -5] + 6
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: ORCA_H = [0,   1,  -1,   2,   -2,  3,   -3,  4,   -4,  5,   -5, (-6,k=1,2)] + 6
       ! --------------------------------------------------------------------------------------
       ! Ordering of solid harmonics in Molpro
       ! --------------------------------------------------------------------------------------
       !                                                                    s
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_S = [0, (-1, k=1,10)] + 1
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_S = [0, (-1, k=1,12)] + 1
       !
       ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
       ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
@@ -51,54 +51,55 @@ module Auto2eInterface
       ! the second element of the array instead of the third.)
       !
       !                                                                    px py pz
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_P = [1, 2, 3, (0,k=1,8)]
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_P = [1, 2, 3, (0,k=1,10)]
       !                                                                    d0  d2- d1+ d2+ d1-
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_D = [0,  -2,  1, 2, -1, (-3,k=1,6)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_D = [0,  -2,  1, 2, -1, (-3,k=1,8)] + 3
       !                                                                    f1+  f1-  f0  f3+  f2-  f3- f2+
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_F = [1,   -1,   0,  3,  -2,  -3,  2, (-4,k=1,4)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_F = [1,   -1,   0,  3,  -2,  -3,  2, (-4,k=1,6)] + 4
       !                                                                    g0  g2-  g1+  g4+  g1-  g2+  g4-  g3+  g3-
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_G = [0,  -2,  1,   4,   -1,  2,   -4,  3,   -3, (-5,k=1,2)] + 5
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_G = [0,  -2,  1,   4,   -1,  2,   -4,  3,   -3, (-5,k=1,4)] + 5
       !                                                                    h1+  h1-  h2+  h3+  h4-  h3-  h4+  h5-  h0  h5+  h2-
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_H = [1,   -1,  2,   3,   -4,  -3,   4,  -5,   0,  5,   -2] + 6
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: MOLPRO_H = [1,   -1,  2,   3,   -4,  -3,   4,  -5,   0,  5,   -2, (-6,k=1,2)] + 6
       !
       ! ------------------------------------------------------------------------------------------------------------
       ! Ordering of solid harmonics in Dalton
       ! ------------------------------------------------------------------------------------------------------------
       !                                                                    s
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_S = [0, (-1, k=1,10)] + 1
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_S = [0, (-1, k=1,12)] + 1
       !
       ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
       ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
       ! is the same as in Molpro. (Otherwise, the pz orbital corresponding to m=0 would be stored in
       ! the second element of the array instead of the third.)
       !                                                                    px py pz
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_P = [1, 2, 3, (0,k=1,8)]
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_P = [1, 2, 3, (0,k=1,10)]
       !
       ! Higher-order solid harmonics in Dalton are ordered from -L to L
       !
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_D = [(k,k=-2,2), (-3,k=1,6)] + 3
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_F = [(k,k=-3,3), (-4,k=1,4)] + 4
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_G = [(k,k=-4,4), (-5,k=1,2)] + 5
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_H = [(k,k=-5,5)] + 6
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_D = [(k,k=-2,2), (-3,k=1,8)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_F = [(k,k=-3,3), (-4,k=1,6)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_G = [(k,k=-4,4), (-5,k=1,4)] + 5
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: DALTON_H = [(k,k=-5,5), (-6,k=1,2)] + 6
       ! -------------------------------------------------------------------------------------------------------------
       ! Ordering of solid harmonics in PySCF
       ! -------------------------------------------------------------------------------------------------------------
       !                                                                    s
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_S = [0, (-1, k=1,10)] + 1
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_S = [0, (-1, k=1,12)] + 1
       !
       ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
       ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
       ! is the same as in Molpro. (Otherwise, the pz orbital corresponding to m=0 would be stored in
       ! the second element of the array instead of the third.)
       !                                                                   px py pz
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_P = [1, 2, 3, (0,k=1,8)]
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_P = [1, 2, 3, (0,k=1,10)]
       !
       ! Higher-order solid harmonics in Dalton are ordered from -L to L
       !
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_D = [(k,k=-2,2), (-3,k=1,6)] + 3
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_F = [(k,k=-3,3), (-4,k=1,4)] + 4
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_G = [(k,k=-4,4), (-5,k=1,2)] + 5
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_H = [(k,k=-5,5)] + 6
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_D = [(k,k=-2,2), (-3,k=1,8)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_F = [(k,k=-3,3), (-4,k=1,6)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_G = [(k,k=-4,4), (-5,k=1,4)] + 5
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_H = [(k,k=-5,5), (-6,k=1,2)] + 6
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: PYSCF_I = [(k,k=-6,6)] + 7
       !
       ! ------------------------------------------------------------------------------------------------------------
       ! Ordering of solid harmonics in Open Molcas
@@ -135,21 +136,21 @@ module Auto2eInterface
       ! d+2 <--- shell 5
       ! ------------------------------------------------------------------------------------------------------------
       !
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_S = [0, (-1, k=1,10)] + 1
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_S = [0, (-1, k=1,12)] + 1
       !
       ! Note the exception: p orbitals are not transformed to the spherical basis by the subroutines
       ! in the Auto2e module, see the SPHER_TRANSF_LMIN parameter. The Cartesian ordering, (px, py, pz),
       ! is the same as in Molpro. (Otherwise, the pz orbital corresponding to m=0 would be stored in
       ! the second element of the array instead of the third.)
       !                                                                         px py pz
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_P = [1, 2, 3, (0,k=1,8)]
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_P = [1, 2, 3, (0,k=1,10)]
       !
       ! Higher-order solid harmonics in Dalton are ordered from -L to L
       !
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_D = [(k,k=-2,2), (-3,k=1,6)] + 3
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_F = [(k,k=-3,3), (-4,k=1,4)] + 4
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_G = [(k,k=-4,4), (-5,k=1,2)] + 5
-      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_H = [(k,k=-5,5)] + 6
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_D = [(k,k=-2,2), (-3,k=1,8)] + 3
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_F = [(k,k=-3,3), (-4,k=1,6)] + 4
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_G = [(k,k=-4,4), (-5,k=1,4)] + 5
+      integer, dimension(Auto2e_MaxAngFuncSpher), parameter :: OPEN_MOLCAS_H = [(k,k=-5,5), (-6,k=1,2)] + 6
       !
       ! ------------------------------------------------------------------------------------------------------------
       ! Ordering of Cartesian functions in Molpro
@@ -311,15 +312,6 @@ contains
 
 
       subroutine auto2e_interface_C(C_ao, C_extao, AOBasis, ExternalOrdering)
-            !
-            ! Transform the AO index p in the orbital coefficients
-            ! matrix C(p, q)
-            !
-            ! C(external program's AO ordering) -> C(auto2e AO ordering)
-            !
-            ! The molecular orbital index (q) is not affected
-            ! by the transformation.
-            !
             real(F64), dimension(:, :), intent(out) :: C_ao
             real(F64), dimension(:, :), intent(in)  :: C_extao
             type(TAOBasis), intent(in)              :: AOBasis
@@ -335,30 +327,6 @@ contains
                   call auto2e_interface_ApplyOrcaPhases_Matrix(C_ao, AOBasis, TwoIndexTransf)
             end if
       end subroutine auto2e_interface_C
-
-
-      subroutine auto2e_interface_V(V_ao, V_extao, AOBasis, ExternalOrdering)
-            !
-            ! Transform the AO index p and AO index q in the one-electron contribution
-            ! of the hamiltonian V(p, q)
-            !
-            ! V(external program's AO ordering) -> V(auto2e AO ordering)
-            !
-            real(F64), dimension(:, :), intent(out) :: V_ao
-            real(F64), dimension(:, :), intent(in)  :: V_extao
-            type(TAOBasis), intent(in)              :: AOBasis
-            integer, intent(in)                     :: ExternalOrdering
-            
-            logical :: FromExternalAO
-            logical :: TwoIndexTransf
-
-            FromExternalAO = .true. ! AOs from external program -> AOs in the Auto2e format
-            TwoIndexTransf = .true. ! Transform both p and q in V(p, q)
-            call auto2e_interface_AngFuncTransf(V_ao, V_extao, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
-            if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
-                  call auto2e_interface_ApplyOrcaPhases_Matrix(V_ao, AOBasis, TwoIndexTransf)
-            end if
-      end subroutine auto2e_interface_V
 
 
       subroutine auto2e_interface_TransfMOCoeffs(X_out, X_in, Map)
@@ -386,25 +354,25 @@ contains
             integer, parameter :: Auto2e_MaxAngFuncSpher = 2 * Auto2e_MaxL + 1
             integer, parameter :: Auto2e_MaxAngFuncCart = ((Auto2e_MaxL+1)*(Auto2e_MaxL+2))/2
 
-            integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Molpro_AngFuncMap &
-                  = reshape([MOLPRO_S, MOLPRO_P, MOLPRO_D,  MOLPRO_F, MOLPRO_G, MOLPRO_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+            ! integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Molpro_AngFuncMap &
+            !       = reshape([MOLPRO_S, MOLPRO_P, MOLPRO_D,  MOLPRO_F, MOLPRO_G, MOLPRO_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
             
-            integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Orca_AngFuncMap &
-                  = reshape([ORCA_S, ORCA_P, ORCA_D,  ORCA_F, ORCA_G, ORCA_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+            ! integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Orca_AngFuncMap &
+            !       = reshape([ORCA_S, ORCA_P, ORCA_D,  ORCA_F, ORCA_G, ORCA_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
 
-            integer, dimension(Auto2e_MaxAngFuncCart, 0:Auto2e_MaxL), parameter :: Molpro_CartAngFuncMap &
-                  = reshape([MOLPRO_CART_S, MOLPRO_CART_P, MOLPRO_CART_D,  MOLPRO_CART_F, MOLPRO_CART_G, MOLPRO_CART_H], &
-                  [Auto2e_MaxAngFuncCart,Auto2e_MaxL+1])
+            ! integer, dimension(Auto2e_MaxAngFuncCart, 0:Auto2e_MaxL), parameter :: Molpro_CartAngFuncMap &
+            !       = reshape([MOLPRO_CART_S, MOLPRO_CART_P, MOLPRO_CART_D,  MOLPRO_CART_F, MOLPRO_CART_G, MOLPRO_CART_H], &
+            !       [Auto2e_MaxAngFuncCart,Auto2e_MaxL+1])
 
-            integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Dalton_AngFuncMap &
-                  = reshape([DALTON_S, DALTON_P, DALTON_D,  DALTON_F, DALTON_G, DALTON_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+            ! integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Dalton_AngFuncMap &
+            !       = reshape([DALTON_S, DALTON_P, DALTON_D,  DALTON_F, DALTON_G, DALTON_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
 
             integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: PySCF_AngFuncMap &
-                  = reshape([PYSCF_S, PYSCF_P, PYSCF_D,  PYSCF_F, PYSCF_G, PYSCF_H], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+                  = reshape([PYSCF_S, PYSCF_P, PYSCF_D,  PYSCF_F, PYSCF_G, PYSCF_H, PYSCF_I], [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
             
-            integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Open_Molcas_AngFuncMap &
-                  = reshape([OPEN_MOLCAS_S, OPEN_MOLCAS_P, OPEN_MOLCAS_D, OPEN_MOLCAS_F, OPEN_MOLCAS_G, OPEN_MOLCAS_H], &
-                  [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
+            ! integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL), parameter :: Open_Molcas_AngFuncMap &
+            !       = reshape([OPEN_MOLCAS_S, OPEN_MOLCAS_P, OPEN_MOLCAS_D, OPEN_MOLCAS_F, OPEN_MOLCAS_G, OPEN_MOLCAS_H], &
+            !       [Auto2e_MaxAngFuncSpher,Auto2e_MaxL+1])
 
             integer, dimension(Auto2e_MaxAngFuncSpher, 0:Auto2e_MaxL) :: AngFuncMap
             integer, dimension(Auto2e_MaxAngFuncCart, 0:Auto2e_MaxL) :: CartAngFuncMap
@@ -422,17 +390,17 @@ contains
             end if
             SortedAngularFunctions = .false.
             Map_extao2ao = -1
-            if (AOBasis%SpherAO) then
+            ! if (AOBasis%SpherAO) then
                   select case (ExternalOrdering)
-                  case (ORBITAL_ORDERING_MOLPRO)
-                        AngFuncMap = Molpro_AngFuncMap
-                  case (ORBITAL_ORDERING_ORCA)
-                        AngFuncMap = Orca_AngFuncMap
-                  case (ORBITAL_ORDERING_DALTON)
-                        AngFuncMap = Dalton_AngFuncMap
-                  case (ORBITAL_ORDERING_OPEN_MOLCAS)
-                        AngFuncMap = Open_Molcas_AngFuncMap
-                        SortedAngularFunctions = .true.
+                  ! case (ORBITAL_ORDERING_MOLPRO)
+                  !       AngFuncMap = Molpro_AngFuncMap
+                  ! case (ORBITAL_ORDERING_ORCA)
+                  !       AngFuncMap = Orca_AngFuncMap
+                  ! case (ORBITAL_ORDERING_DALTON)
+                  !       AngFuncMap = Dalton_AngFuncMap
+                  ! case (ORBITAL_ORDERING_OPEN_MOLCAS)
+                  !       AngFuncMap = Open_Molcas_AngFuncMap
+                  !       SortedAngularFunctions = .true.
                   case (ORBITAL_ORDERING_PYSCF)
                         AngFuncMap = PySCF_AngFuncMap
                   case default
@@ -480,34 +448,34 @@ contains
                               end do
                         end if
                   end associate
-            else
-                  select case (ExternalOrdering)
-                  case (ORBITAL_ORDERING_MOLPRO)
-                        CartAngFuncMap = Molpro_CartAngFuncMap
-                  case default
-                        call msg("Invalid external orbital ordering")
-                        error stop
-                  end select
-                  associate ( &
-                        ShellLoc => AOBasis%ShellLocCart, &
-                        ShellParamsIdx => AOBasis%ShellParamsIdx, &
-                        ShellMomentum => AOBasis%ShellMomentum, &
-                        NAngFunc => AOBasis%NAngFuncCart, &
-                        NShells => AOBasis%NShells, &
-                        NAO => AOBasis%NAOCart &
-                        )                        
-                        do kk = 1, NShells
-                              k = ShellParamsIdx(kk)
-                              L = ShellMomentum(k)
-                              n = NAngFunc(k)
-                              p0 = ShellLoc(kk)
-                              p1 = ShellLoc(kk) + n - 1
-                              do p = p0, p1
-                                    Map_extao2ao(p) = p0 + CartAngFuncMap(p-p0+1, L) - 1
-                              end do
-                        end do                        
-                  end associate
-            end if
+            ! else
+            !       select case (ExternalOrdering)
+            !       case (ORBITAL_ORDERING_MOLPRO)
+            !             CartAngFuncMap = Molpro_CartAngFuncMap
+            !       case default
+            !             call msg("Invalid external orbital ordering")
+            !             error stop
+            !       end select
+            !       associate ( &
+            !             ShellLoc => AOBasis%ShellLocCart, &
+            !             ShellParamsIdx => AOBasis%ShellParamsIdx, &
+            !             ShellMomentum => AOBasis%ShellMomentum, &
+            !             NAngFunc => AOBasis%NAngFuncCart, &
+            !             NShells => AOBasis%NShells, &
+            !             NAO => AOBasis%NAOCart &
+            !             )                        
+            !             do kk = 1, NShells
+            !                   k = ShellParamsIdx(kk)
+            !                   L = ShellMomentum(k)
+            !                   n = NAngFunc(k)
+            !                   p0 = ShellLoc(kk)
+            !                   p1 = ShellLoc(kk) + n - 1
+            !                   do p = p0, p1
+            !                         Map_extao2ao(p) = p0 + CartAngFuncMap(p-p0+1, L) - 1
+            !                   end do
+            !             end do                        
+            !       end associate
+            ! end if
             do p = 1, NAO
                   Map_ao2extao(Map_extao2ao(p)) = p
             end do

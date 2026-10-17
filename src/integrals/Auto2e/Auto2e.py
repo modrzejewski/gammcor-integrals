@@ -290,6 +290,7 @@ def KetTransfer_Module(MaxL):
 !
 module auto2e_KetTransfer
 use arithmetic
+use math_constants    
 implicit none
 contains{Subroutines}end module auto2e_KetTransfer
 """.format(Subroutines=Subroutines)
@@ -804,6 +805,7 @@ def RCopy_KetTransform_Module(LBra, LKet):
     Code = []
     Code.append((ModuleName, ("""module {ModuleName}
 use arithmetic
+use math_constants    
 implicit none
 
 {IdxArray}
@@ -866,6 +868,7 @@ def KetTransform_Module(LBra, LKet):
             ModuleName = "auto2e_KetTransform_{LBra}_{LKet}".format(LBra=LBra, LKet=LKet)
         Code.append((ModuleName, """module {ModuleName}
 use arithmetic
+use math_constants        
 implicit none
 contains
 {Subs}end module {ModuleName}""".format(Subs=Subroutines[k], ModuleName=ModuleName)))
@@ -988,6 +991,7 @@ def HermiteToCartesian_BraTransformModule(MaxL):
 !
 module auto2e_BraTransform
 use arithmetic
+use math_constants    
 implicit none
 
 contains
@@ -1079,6 +1083,7 @@ def HermiteModule(MaxL):
 !
 module auto2e_Hermite
 use arithmetic
+use math_constants    
 implicit none
 
 contains
@@ -1274,6 +1279,7 @@ def WMatrix_Module(MaxL, ModuleNames):
             ModuleName = "auto2e_WMatrix"
         Code.append((ModuleName, """{Comment}module {ModuleName}
 use arithmetic
+use math_constants        
 use boys
 use auto2e_Hermite
 use auto2e_BraTransform
@@ -1587,6 +1593,7 @@ def ERI_Module(lA, lB, lC, lD, TargetLayout, WMatrix_Modules, SpherTransf):
 !
 module auto2e_eri_{a}{b}{c}{d}
 use arithmetic
+use math_constants    
 use auto2e_KetTransfer
 {SpherTransfModule}
 {ImportWMatrix}
@@ -1912,4 +1919,4 @@ def MakeAll(MaxL, TargetLayout):
     FileList.append([FilePath])
     ParallelBuild.BuildScript(FileList, path.join(RootDir, "Build.py"))
 
-MakeAll(5, ["d", "c", "b", "a"])
+MakeAll(6, ["d", "c", "b", "a"])

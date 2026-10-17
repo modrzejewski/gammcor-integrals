@@ -25,12 +25,13 @@
 !
 module auto2e_eri_hfgs
 use arithmetic
-use math_constants
+use math_constants    
 use auto2e_KetTransfer
 use auto2e_SpherTransf
 use auto2e_WMatrix_part1
 use auto2e_WMatrix_part2
 use auto2e_WMatrix_part3
+use auto2e_WMatrix_part4
 implicit none
 
 contains
@@ -325,72 +326,6 @@ end do
 end do
 end subroutine auto2e_Normalize_Spher_5_3_4_0_CDBA
 
-subroutine auto2e_frontend_0_4_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-real(F64), dimension(3150) :: H
-call auto2e_eri_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, &
-   Rb, CntrB, ExpB, NprimB, &
-   Ra, CntrA, ExpA, NprimA, Kappa)
-call auto2e_Normalize_5_3_4_0_BACD(G, H, NormC, NormD, NormB, NormA)
-end subroutine auto2e_frontend_0_4_5_3
-
-subroutine auto2e_frontend_Spher_0_4_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-real(F64), dimension(693) :: H
-call auto2e_eri_Spher_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, &
-   Rb, CntrB, ExpB, NprimB, &
-   Ra, CntrA, ExpA, NprimA, Kappa)
-call auto2e_Normalize_Spher_5_3_4_0_BACD(G, H, NormC, NormD, NormB, NormA)
-end subroutine auto2e_frontend_Spher_0_4_5_3
-
-subroutine auto2e_frontend_3_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-call auto2e_eri_5_3_4_0(G, Rb, CntrB, ExpB, NprimB, &
-   Ra, CntrA, ExpA, NprimA, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_5_3_4_0_CDAB(G, NormB, NormA, NormC, NormD)
-end subroutine auto2e_frontend_3_5_4_0
-
-subroutine auto2e_frontend_Spher_3_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-call auto2e_eri_Spher_5_3_4_0(G, Rb, CntrB, ExpB, NprimB, &
-   Ra, CntrA, ExpA, NprimA, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_Spher_5_3_4_0_CDAB(G, NormB, NormA, NormC, NormD)
-end subroutine auto2e_frontend_Spher_3_5_4_0
-
 subroutine auto2e_frontend_5_3_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
@@ -425,7 +360,7 @@ call auto2e_eri_Spher_5_3_4_0(H, Ra, CntrA, ExpA, NprimA, &
 call auto2e_Normalize_Spher_5_3_4_0_CDBA(G, H, NormA, NormB, NormC, NormD)
 end subroutine auto2e_frontend_Spher_5_3_4_0
 
-subroutine auto2e_frontend_4_0_3_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_0_4_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -435,14 +370,14 @@ real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
 integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
 real(F64), intent(in) :: Kappa
 real(F64), dimension(3150) :: H
-call auto2e_eri_5_3_4_0(H, Rd, CntrD, ExpD, NprimD, &
-   Rc, CntrC, ExpC, NprimC, &
-   Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, Kappa)
-call auto2e_Normalize_5_3_4_0_ABCD(G, H, NormD, NormC, NormA, NormB)
-end subroutine auto2e_frontend_4_0_3_5
+call auto2e_eri_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, &
+   Rb, CntrB, ExpB, NprimB, &
+   Ra, CntrA, ExpA, NprimA, Kappa)
+call auto2e_Normalize_5_3_4_0_BACD(G, H, NormC, NormD, NormB, NormA)
+end subroutine auto2e_frontend_0_4_5_3
 
-subroutine auto2e_frontend_Spher_4_0_3_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_Spher_0_4_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -452,12 +387,46 @@ real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
 integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
 real(F64), intent(in) :: Kappa
 real(F64), dimension(693) :: H
-call auto2e_eri_Spher_5_3_4_0(H, Rd, CntrD, ExpD, NprimD, &
-   Rc, CntrC, ExpC, NprimC, &
+call auto2e_eri_Spher_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, &
+   Rb, CntrB, ExpB, NprimB, &
+   Ra, CntrA, ExpA, NprimA, Kappa)
+call auto2e_Normalize_Spher_5_3_4_0_BACD(G, H, NormC, NormD, NormB, NormA)
+end subroutine auto2e_frontend_Spher_0_4_5_3
+
+subroutine auto2e_frontend_4_0_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(3150) :: H
+call auto2e_eri_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, &
    Ra, CntrA, ExpA, NprimA, &
    Rb, CntrB, ExpB, NprimB, Kappa)
-call auto2e_Normalize_Spher_5_3_4_0_ABCD(G, H, NormD, NormC, NormA, NormB)
-end subroutine auto2e_frontend_Spher_4_0_3_5
+call auto2e_Normalize_5_3_4_0_BACD(G, H, NormC, NormD, NormA, NormB)
+end subroutine auto2e_frontend_4_0_5_3
+
+subroutine auto2e_frontend_Spher_4_0_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(693) :: H
+call auto2e_eri_Spher_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, &
+   Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, Kappa)
+call auto2e_Normalize_Spher_5_3_4_0_BACD(G, H, NormC, NormD, NormA, NormB)
+end subroutine auto2e_frontend_Spher_4_0_5_3
 
 subroutine auto2e_frontend_5_3_0_4(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
@@ -492,6 +461,40 @@ call auto2e_eri_Spher_5_3_4_0(H, Ra, CntrA, ExpA, NprimA, &
    Rc, CntrC, ExpC, NprimC, Kappa)
 call auto2e_Normalize_Spher_5_3_4_0_CDBA(G, H, NormA, NormB, NormD, NormC)
 end subroutine auto2e_frontend_Spher_5_3_0_4
+
+subroutine auto2e_frontend_4_0_3_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(3150) :: H
+call auto2e_eri_5_3_4_0(H, Rd, CntrD, ExpD, NprimD, &
+   Rc, CntrC, ExpC, NprimC, &
+   Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, Kappa)
+call auto2e_Normalize_5_3_4_0_ABCD(G, H, NormD, NormC, NormA, NormB)
+end subroutine auto2e_frontend_4_0_3_5
+
+subroutine auto2e_frontend_Spher_4_0_3_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(693) :: H
+call auto2e_eri_Spher_5_3_4_0(H, Rd, CntrD, ExpD, NprimD, &
+   Rc, CntrC, ExpC, NprimC, &
+   Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, Kappa)
+call auto2e_Normalize_Spher_5_3_4_0_ABCD(G, H, NormD, NormC, NormA, NormB)
+end subroutine auto2e_frontend_Spher_4_0_3_5
 
 subroutine auto2e_frontend_0_4_3_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
@@ -559,7 +562,7 @@ call auto2e_eri_Spher_5_3_4_0(G, Rb, CntrB, ExpB, NprimB, &
 call auto2e_Normalize_Spher_5_3_4_0_CDAB(G, NormB, NormA, NormD, NormC)
 end subroutine auto2e_frontend_Spher_3_5_0_4
 
-subroutine auto2e_frontend_4_0_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_3_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -568,15 +571,14 @@ real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
 real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
 integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
 real(F64), intent(in) :: Kappa
-real(F64), dimension(3150) :: H
-call auto2e_eri_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, &
+call auto2e_eri_5_3_4_0(G, Rb, CntrB, ExpB, NprimB, &
    Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, Kappa)
-call auto2e_Normalize_5_3_4_0_BACD(G, H, NormC, NormD, NormA, NormB)
-end subroutine auto2e_frontend_4_0_5_3
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_5_3_4_0_CDAB(G, NormB, NormA, NormC, NormD)
+end subroutine auto2e_frontend_3_5_4_0
 
-subroutine auto2e_frontend_Spher_4_0_5_3(G, Ra, CntrA, NormA, ExpA, NprimA, &
+subroutine auto2e_frontend_Spher_3_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
 real(F64), dimension(*), intent(out) :: G
@@ -585,11 +587,10 @@ real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
 real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
 integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
 real(F64), intent(in) :: Kappa
-real(F64), dimension(693) :: H
-call auto2e_eri_Spher_5_3_4_0(H, Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, &
+call auto2e_eri_Spher_5_3_4_0(G, Rb, CntrB, ExpB, NprimB, &
    Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, Kappa)
-call auto2e_Normalize_Spher_5_3_4_0_BACD(G, H, NormC, NormD, NormA, NormB)
-end subroutine auto2e_frontend_Spher_4_0_5_3
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_Spher_5_3_4_0_CDAB(G, NormB, NormA, NormC, NormD)
+end subroutine auto2e_frontend_Spher_3_5_4_0
 end module auto2e_eri_hfgs
