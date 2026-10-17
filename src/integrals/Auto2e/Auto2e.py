@@ -290,6 +290,7 @@ def KetTransfer_Module(MaxL):
 !
 module auto2e_KetTransfer
 use arithmetic
+use math_constants    
 implicit none
 contains{Subroutines}end module auto2e_KetTransfer
 """.format(Subroutines=Subroutines)
@@ -990,6 +991,7 @@ def HermiteToCartesian_BraTransformModule(MaxL):
 !
 module auto2e_BraTransform
 use arithmetic
+use math_constants    
 implicit none
 
 contains
@@ -1081,6 +1083,7 @@ def HermiteModule(MaxL):
 !
 module auto2e_Hermite
 use arithmetic
+use math_constants    
 implicit none
 
 contains

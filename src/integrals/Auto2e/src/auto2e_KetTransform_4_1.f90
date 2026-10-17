@@ -1,6 +1,6 @@
 module auto2e_KetTransform_4_1
 use arithmetic
-use math_constants
+use math_constants        
 implicit none
 contains
 
@@ -80,20 +80,20 @@ real(F64), dimension(:), intent(in) :: Ex
 real(F64), dimension(:), intent(in) :: Ey
 real(F64), dimension(:), intent(in) :: Ez
 real(F64), dimension(:), intent(in) :: R
-S(1:5) = Ex(1)*Ey(1)*(Ez(2)*R(1:5) - Ez(3)*R(22:26))
-S(6:9) = Ex(1)*Ey(1)*(Ez(2)*R(7:10) - Ez(3)*R(27:30))
-S(10:12) = Ex(1)*Ey(1)*(Ez(2)*R(12:14) - Ez(3)*R(31:33))
-S(13:14) = Ex(1)*Ey(1)*(Ez(2)*R(16:17) - Ez(3)*R(34:35))
-S(15) = Ex(1)*Ey(1)*(Ez(2)*R(19) - Ez(3)*R(36))
-S(16:19) = Ex(1)*Ey(1)*(Ez(2)*R(22:25) - Ez(3)*R(37:40))
-S(20:22) = Ex(1)*Ey(1)*(Ez(2)*R(27:29) - Ez(3)*R(41:43))
-S(23:24) = Ex(1)*Ey(1)*(Ez(2)*R(31:32) - Ez(3)*R(44:45))
-S(25) = Ex(1)*Ey(1)*(Ez(2)*R(34) - Ez(3)*R(46))
-S(26:28) = Ex(1)*Ey(1)*(Ez(2)*R(37:39) - Ez(3)*R(47:49))
-S(29:30) = Ex(1)*Ey(1)*(Ez(2)*R(41:42) - Ez(3)*R(50:51))
-S(31) = Ex(1)*Ey(1)*(Ez(2)*R(44) - Ez(3)*R(52))
-S(32:33) = Ex(1)*Ey(1)*(Ez(2)*R(47:48) - Ez(3)*R(53:54))
-S(34) = Ex(1)*Ey(1)*(Ez(2)*R(50) - Ez(3)*R(55))
-S(35) = Ex(1)*Ey(1)*(Ez(2)*R(53) - Ez(3)*R(56))
+S(1:5) = Ey(1)*Ex(1)*(Ez(2)*R(1:5) - Ez(3)*R(22:26))
+S(6:9) = Ey(1)*Ex(1)*(Ez(2)*R(7:10) - Ez(3)*R(27:30))
+S(10:12) = Ey(1)*Ex(1)*(Ez(2)*R(12:14) - Ez(3)*R(31:33))
+S(13:14) = Ey(1)*Ex(1)*(Ez(2)*R(16:17) - Ez(3)*R(34:35))
+S(15) = Ey(1)*Ex(1)*(Ez(2)*R(19) - Ez(3)*R(36))
+S(16:19) = Ey(1)*Ex(1)*(Ez(2)*R(22:25) - Ez(3)*R(37:40))
+S(20:22) = Ey(1)*Ex(1)*(Ez(2)*R(27:29) - Ez(3)*R(41:43))
+S(23:24) = Ey(1)*Ex(1)*(Ez(2)*R(31:32) - Ez(3)*R(44:45))
+S(25) = Ey(1)*Ex(1)*(Ez(2)*R(34) - Ez(3)*R(46))
+S(26:28) = Ey(1)*Ex(1)*(Ez(2)*R(37:39) - Ez(3)*R(47:49))
+S(29:30) = Ey(1)*Ex(1)*(Ez(2)*R(41:42) - Ez(3)*R(50:51))
+S(31) = Ey(1)*Ex(1)*(Ez(2)*R(44) - Ez(3)*R(52))
+S(32:33) = Ey(1)*Ex(1)*(Ez(2)*R(47:48) - Ez(3)*R(53:54))
+S(34) = Ey(1)*Ex(1)*(Ez(2)*R(50) - Ez(3)*R(55))
+S(35) = Ey(1)*Ex(1)*(Ez(2)*R(53) - Ez(3)*R(56))
 end subroutine auto2e_KetTransform_4_0_0_1
 end module auto2e_KetTransform_4_1

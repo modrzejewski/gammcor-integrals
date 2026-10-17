@@ -25,12 +25,13 @@
 !
 module auto2e_eri_fsss
 use arithmetic
-use math_constants
+use math_constants    
 use auto2e_KetTransfer
 use auto2e_SpherTransf
 use auto2e_WMatrix_part1
 use auto2e_WMatrix_part2
 use auto2e_WMatrix_part3
+use auto2e_WMatrix_part4
 implicit none
 
 contains
@@ -165,6 +166,38 @@ call auto2e_eri_Spher_3_0_0_0(G, Rd, CntrD, ExpD, NprimD, &
 call auto2e_Normalize_Spher_3_0_0_0_ABCD(G, NormD, NormC, NormA, NormB)
 end subroutine auto2e_frontend_Spher_0_0_0_3
 
+subroutine auto2e_frontend_3_0_0_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+call auto2e_eri_3_0_0_0(G, Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, &
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_3_0_0_0_ABCD(G, NormA, NormB, NormC, NormD)
+end subroutine auto2e_frontend_3_0_0_0
+
+subroutine auto2e_frontend_Spher_3_0_0_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+call auto2e_eri_Spher_3_0_0_0(G, Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, &
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_Spher_3_0_0_0_ABCD(G, NormA, NormB, NormC, NormD)
+end subroutine auto2e_frontend_Spher_3_0_0_0
+
 subroutine auto2e_frontend_0_3_0_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
@@ -228,36 +261,4 @@ call auto2e_eri_Spher_3_0_0_0(G, Rc, CntrC, ExpC, NprimC, &
    Rb, CntrB, ExpB, NprimB, Kappa)
 call auto2e_Normalize_Spher_3_0_0_0_ABCD(G, NormC, NormD, NormA, NormB)
 end subroutine auto2e_frontend_Spher_0_0_3_0
-
-subroutine auto2e_frontend_3_0_0_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-call auto2e_eri_3_0_0_0(G, Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_3_0_0_0_ABCD(G, NormA, NormB, NormC, NormD)
-end subroutine auto2e_frontend_3_0_0_0
-
-subroutine auto2e_frontend_Spher_3_0_0_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-call auto2e_eri_Spher_3_0_0_0(G, Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_Spher_3_0_0_0_ABCD(G, NormA, NormB, NormC, NormD)
-end subroutine auto2e_frontend_Spher_3_0_0_0
 end module auto2e_eri_fsss

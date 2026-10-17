@@ -25,12 +25,13 @@
 !
 module auto2e_eri_hhgs
 use arithmetic
-use math_constants
+use math_constants    
 use auto2e_KetTransfer
 use auto2e_SpherTransf
 use auto2e_WMatrix_part1
 use auto2e_WMatrix_part2
 use auto2e_WMatrix_part3
+use auto2e_WMatrix_part4
 implicit none
 
 contains
@@ -243,40 +244,6 @@ end do
 end do
 end subroutine auto2e_Normalize_Spher_5_5_4_0_CDBA
 
-subroutine auto2e_frontend_5_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-real(F64), dimension(6615) :: H
-call auto2e_eri_5_5_4_0(H, Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_5_5_4_0_CDBA(G, H, NormA, NormB, NormC, NormD)
-end subroutine auto2e_frontend_5_5_4_0
-
-subroutine auto2e_frontend_Spher_5_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
-Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
-Rd, CntrD, NormD, ExpD, NprimD, Kappa)
-real(F64), dimension(*), intent(out) :: G
-real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
-real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
-real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
-integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
-real(F64), intent(in) :: Kappa
-real(F64), dimension(1089) :: H
-call auto2e_eri_Spher_5_5_4_0(H, Ra, CntrA, ExpA, NprimA, &
-   Rb, CntrB, ExpB, NprimB, &
-   Rc, CntrC, ExpC, NprimC, &
-   Rd, CntrD, ExpD, NprimD, Kappa)
-call auto2e_Normalize_Spher_5_5_4_0_CDBA(G, H, NormA, NormB, NormC, NormD)
-end subroutine auto2e_frontend_Spher_5_5_4_0
-
 subroutine auto2e_frontend_0_4_5_5(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
 Rd, CntrD, NormD, ExpD, NprimD, Kappa)
@@ -344,6 +311,40 @@ call auto2e_eri_Spher_5_5_4_0(H, Rc, CntrC, ExpC, NprimC, &
    Rb, CntrB, ExpB, NprimB, Kappa)
 call auto2e_Normalize_Spher_5_5_4_0_BACD(G, H, NormC, NormD, NormA, NormB)
 end subroutine auto2e_frontend_Spher_4_0_5_5
+
+subroutine auto2e_frontend_5_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(6615) :: H
+call auto2e_eri_5_5_4_0(H, Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, &
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_5_5_4_0_CDBA(G, H, NormA, NormB, NormC, NormD)
+end subroutine auto2e_frontend_5_5_4_0
+
+subroutine auto2e_frontend_Spher_5_5_4_0(G, Ra, CntrA, NormA, ExpA, NprimA, &
+Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &
+Rd, CntrD, NormD, ExpD, NprimD, Kappa)
+real(F64), dimension(*), intent(out) :: G
+real(F64), dimension(3), intent(in) :: Ra, Rb, Rc, Rd
+real(F64), dimension(*), intent(in) :: CntrA, NormA, ExpA, CntrB, NormB, ExpB
+real(F64), dimension(*), intent(in) :: CntrC, NormC, ExpC, CntrD, NormD, ExpD
+integer, intent(in) :: NprimA, NprimB, NprimC, NprimD
+real(F64), intent(in) :: Kappa
+real(F64), dimension(1089) :: H
+call auto2e_eri_Spher_5_5_4_0(H, Ra, CntrA, ExpA, NprimA, &
+   Rb, CntrB, ExpB, NprimB, &
+   Rc, CntrC, ExpC, NprimC, &
+   Rd, CntrD, ExpD, NprimD, Kappa)
+call auto2e_Normalize_Spher_5_5_4_0_CDBA(G, H, NormA, NormB, NormC, NormD)
+end subroutine auto2e_frontend_Spher_5_5_4_0
 
 subroutine auto2e_frontend_5_5_0_4(G, Ra, CntrA, NormA, ExpA, NprimA, &
 Rb, CntrB, NormB, ExpB, NprimB, Rc, CntrC, NormC, ExpC, NprimC, &

@@ -1,5 +1,5 @@
 !
-! Compute the electron repulsion integrals (LS|KS), 0<=L,K<=10, and store them in W(Row0:, Col0:).
+! Compute the electron repulsion integrals (LS|KS), 0<=L,K<=12, and store them in W(Row0:, Col0:).
 ! Because this subroutine is used before the horizontal recurrence step, the contraction coefficients
 ! (CntrA, CntrB, ...) depend on the primitive Gaussian index, but do not depend on the angular function.
 !
@@ -31,7 +31,7 @@
 !
 module auto2e_WMatrix_part1
 use arithmetic
-use math_constants
+use math_constants        
 use boys
 use auto2e_Hermite
 use auto2e_BraTransform
@@ -45,6 +45,29 @@ use auto2e_KetTransform_10_6
 use auto2e_KetTransform_10_7
 use auto2e_KetTransform_10_8
 use auto2e_KetTransform_10_9
+use auto2e_KetTransform_11_1
+use auto2e_KetTransform_11_10
+use auto2e_KetTransform_11_11
+use auto2e_KetTransform_11_2
+use auto2e_KetTransform_11_3
+use auto2e_KetTransform_11_4
+use auto2e_KetTransform_11_5
+use auto2e_KetTransform_11_6
+use auto2e_KetTransform_11_7
+use auto2e_KetTransform_11_8
+use auto2e_KetTransform_11_9
+use auto2e_KetTransform_12_1
+use auto2e_KetTransform_12_10
+use auto2e_KetTransform_12_11
+use auto2e_KetTransform_12_12
+use auto2e_KetTransform_12_2
+use auto2e_KetTransform_12_3
+use auto2e_KetTransform_12_4
+use auto2e_KetTransform_12_5
+use auto2e_KetTransform_12_6
+use auto2e_KetTransform_12_7
+use auto2e_KetTransform_12_8
+use auto2e_KetTransform_12_9
 use auto2e_KetTransform_2_1
 use auto2e_KetTransform_2_2
 use auto2e_KetTransform_3_1

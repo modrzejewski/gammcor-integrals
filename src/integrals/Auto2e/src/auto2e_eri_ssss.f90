@@ -25,12 +25,13 @@
 !
 module auto2e_eri_ssss
 use arithmetic
-use math_constants
+use math_constants    
 use auto2e_KetTransfer
 use auto2e_SpherTransf
 use auto2e_WMatrix_part1
 use auto2e_WMatrix_part2
 use auto2e_WMatrix_part3
+use auto2e_WMatrix_part4
 implicit none
 
 contains
