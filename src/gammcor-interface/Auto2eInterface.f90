@@ -328,6 +328,29 @@ contains
             end if
       end subroutine auto2e_interface_C
 
+      subroutine auto2e_interface_V(V_ao, V_extao, AOBasis, ExternalOrdering)
+            !
+            ! Transform the AO index p and AO index q in the one-electron contribution
+            ! of the hamiltonian V(p, q)
+            !
+            ! V(external program's AO ordering) -> V(auto2e AO ordering)
+            !
+            real(F64), dimension(:, :), intent(out) :: V_ao
+            real(F64), dimension(:, :), intent(in)  :: V_extao
+            type(TAOBasis), intent(in)              :: AOBasis
+            integer, intent(in)                     :: ExternalOrdering
+            
+            logical :: FromExternalAO
+            logical :: TwoIndexTransf
+
+            FromExternalAO = .true. ! AOs from external program -> AOs in the Auto2e format
+            TwoIndexTransf = .true. ! Transform both p and q in V(p, q)
+            call auto2e_interface_AngFuncTransf(V_ao, V_extao, FromExternalAO, TwoIndexTransf, AOBasis, ExternalOrdering)
+            if (ExternalOrdering == ORBITAL_ORDERING_ORCA) then
+                  call auto2e_interface_ApplyOrcaPhases_Matrix(V_ao, AOBasis, TwoIndexTransf)
+            end if
+      end subroutine auto2e_interface_V
+
 
       subroutine auto2e_interface_TransfMOCoeffs(X_out, X_in, Map)
             real(F64), dimension(:, :), intent(out) :: X_out

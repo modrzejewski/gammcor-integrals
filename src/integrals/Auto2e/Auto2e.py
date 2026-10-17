@@ -1929,5 +1929,5 @@ def MakeAll(MaxL, TargetLayout):
 # thread and worker threads (OMP threads) to guarantee a
 # proper workspace for the integral subroutines.
 #
-Auto2eMaxL = 5
+Auto2eMaxL = 6
 MakeAll(Auto2eMaxL, ["d", "c", "b", "a"])

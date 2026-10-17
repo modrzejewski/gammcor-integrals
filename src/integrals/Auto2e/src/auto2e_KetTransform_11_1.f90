@@ -1,6 +1,6 @@
 module auto2e_KetTransform_11_1
 use arithmetic
-use math_constants    
+use math_constants
 implicit none
 
 integer, dimension(78, 3), parameter :: RCopyIdx_11_1 = reshape([1, 14, 26, 37, 47, &

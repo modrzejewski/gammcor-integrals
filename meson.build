@@ -20,7 +20,7 @@ cholesky_lib = static_library(
   'cholesky',
   library_sources,
   name_prefix : '',
-  install : false,
+  install : true,
 )
 
 # Test executable (named test_bin internally to avoid collision with Meson's reserved 'test' target)
