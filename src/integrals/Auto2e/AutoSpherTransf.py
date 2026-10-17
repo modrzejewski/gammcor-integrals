@@ -5,11 +5,26 @@
 # -------------------------------------------------------------------
 from scipy.special import comb
 from math import sqrt, factorial, pi
-from scipy.special import factorial2 as dblfact
+import scipy.special
 import numpy as np
 from Auto2eGlobal import *
+import sys
 
 SMALL_COEFF_THRESH = 10 * np.finfo(float).eps
+
+def dblfact(n):
+    #
+    # Definition of n!! according to the Wolfram Mathematica documentation.
+    # 
+    #
+    if n == -1 or n == 0:
+        return 1
+    elif n > 0:
+        return scipy.special.factorial2(n, exact=True)
+    else:
+        print(f"Invalid argument passed to dblfact: {n}")
+        sys.exit(1)
+        
 
 def XYZInt_Eq15(l, lx0, ly0, lz0):
     #
@@ -27,11 +42,11 @@ def XYZInt_Eq15(l, lx0, ly0, lz0):
     #    doi: 10.1002/jcc.20410
     #
     l0 = lx0 + ly0 + lz0
-    d = dblfact(l+l0+1, exact=True)
+    d = dblfact(l+l0+1)
     xyz = np.zeros((l+1,l+1,l+1))
     for lx in range(l+1):
         x = lx + lx0
-        a = 4 * pi * dblfact(x-1, exact=True)
+        a = 4 * pi * dblfact(x-1)
         for ly in range(l - lx + 1):
             lz = l - lx - ly
             y = ly + ly0
@@ -39,8 +54,8 @@ def XYZInt_Eq15(l, lx0, ly0, lz0):
             if (x % 2 == 1) or (y % 2 == 1) or (z % 2 == 1):
                 xyz[lx][ly][lz] = 0
             else:
-                b = dblfact(y-1, exact=True)
-                c = dblfact(z-1, exact=True)
+                b = dblfact(y-1)
+                c = dblfact(z-1)
                 xyz[lx][ly][lz] = a * b * c / d
     return xyz
                 
@@ -79,9 +94,9 @@ def Nslm(l, m):
     else:
         sqrc = sqrt(2)
     #
-    # Real solid harmonics are normalized to 1
-    # instead of Racah's normalization in Helgaker's
-    # textbook
+    # Real spherical harmonics Sl^m are normalized to 1
+    # on the unit sphere instead of Racah's normalization
+    # in Helgaker's textbook
     #
     a = sqrt((2*l+1)/(4*pi))
     return a * sqra * sqrb * sqrc / (2**abs(m) * factorial(l))
@@ -119,7 +134,8 @@ def RSHU_l_eq_j(l, m):
     # coefficient in Eq. 32 and 33 in [2].
     #
     # The implementation uses the equations given in Helgaker's
-    # textbook (Eqs. 9.1.9-12 in Ref. 1), but rescaled by the factor
+    # textbook (Eqs. 9.1.9-12 in Ref. 1). The spherical harmonics
+    # according to Racah's definition are rescaled by the factor
     # of Sqrt(2l+1/4Pi) to change the normalization integral to
     # unity.
     #
@@ -127,10 +143,10 @@ def RSHU_l_eq_j(l, m):
     # is computed in a single call.
     #
     # Definition of real spherical harmonics:
-    # For m > 0: Sl^m = (-1)^m/Sqrt(2) Yl^m + 1/Sqrt(2)       Yl^(-m)
-    # For m < 0: Sl^m =      i/Sqrt(2) Yl^m - i(-1)^m/Sqrt(2) Yl^(-m)
-    # For m = 0: Sl^m = Yl^m
-    # Yl^m are orthonormal, complex-valued spherical harmonics.
+    # For m > 0: Sl^m = (-1)^m * Sqrt(2) * Re(Yl^m)
+    # For m < 0: Sl^m = (-1)^m * Sqrt(2) * Im(Yl^|m|)
+    # For m = 0: Sl^m = Yl^0
+    # Yl^m are orthonormal, complex-valued spherical harmonics.    
     #
     # 1. Helgaker, T., Jorgensen, P., Olsen, J., Molecular
     #    Electronic-Structure Theory, Wiley & Sons Chichester
@@ -186,10 +202,10 @@ def RSHUV(LMax):
     #
     # The matrix U[(l,m,j)] contains coefficients of the transformation
     # from Cartesian polynomials x**lx * y**ly * z**lz, lx+ly+lz=j to
-    # real spherical harmonics Ylm normalized to one on
-    # the unit sphere.
+    # real spherical harmonics Sl^m normalized to one on
+    # the unit sphere (see RSHU_l_eq_j for the definition of Sl^m).
     #
-    # Ylm = Sum(lx+ly+lz=j) U[(l,m,j)][lx][ly][lz] x**lx * y**ly * z**lz
+    # Sl^m = Sum(lx+ly+lz=j) U[(l,m,j)][lx][ly][lz] x**lx * y**ly * z**lz
     #
     # The definition of the coefficients U[lx][ly][lz] is numerically
     # equivalent to the definition in Ref. 1, but it's coded according
@@ -202,8 +218,11 @@ def RSHUV(LMax):
     # The matrix V is the inverse of U and should be used to transform
     # the matrices which act on the atomic orbitals:
     #
-    # Sum(l,m) U[(l,m,j)][mx][my][mz] * U[(l,m,j)][nx][nx][nz] =
+    # Sum(l,m) V[(l,m,j)][mx][my][mz] * U[(l,m,j)][nx][ny][nz] =
     # delta(mx,nx) * delta(my,ny) * delta(mz,nz)
+    #
+    # The sum runs over l <= j with even j-l and over -l <= m <= l.
+    # test_UV prints this product for visual inspection.
     #
     #
     # 1. Moreno-Flores, R., Alvarez-Mendez, R., Vela, A., and

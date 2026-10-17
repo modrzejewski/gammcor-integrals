@@ -805,7 +805,7 @@ def RCopy_KetTransform_Module(LBra, LKet):
     Code = []
     Code.append((ModuleName, ("""module {ModuleName}
 use arithmetic
-use math_constants    
+use math_constants
 implicit none
 
 {IdxArray}
@@ -868,7 +868,7 @@ def KetTransform_Module(LBra, LKet):
             ModuleName = "auto2e_KetTransform_{LBra}_{LKet}".format(LBra=LBra, LKet=LKet)
         Code.append((ModuleName, """module {ModuleName}
 use arithmetic
-use math_constants        
+use math_constants
 implicit none
 contains
 {Subs}end module {ModuleName}""".format(Subs=Subroutines[k], ModuleName=ModuleName)))
@@ -1279,7 +1279,7 @@ def WMatrix_Module(MaxL, ModuleNames):
             ModuleName = "auto2e_WMatrix"
         Code.append((ModuleName, """{Comment}module {ModuleName}
 use arithmetic
-use math_constants        
+use math_constants
 use boys
 use auto2e_Hermite
 use auto2e_BraTransform
@@ -1593,7 +1593,7 @@ def ERI_Module(lA, lB, lC, lD, TargetLayout, WMatrix_Modules, SpherTransf):
 !
 module auto2e_eri_{a}{b}{c}{d}
 use arithmetic
-use math_constants    
+use math_constants
 use auto2e_KetTransfer
 {SpherTransfModule}
 {ImportWMatrix}
@@ -1919,4 +1919,15 @@ def MakeAll(MaxL, TargetLayout):
     FileList.append([FilePath])
     ParallelBuild.BuildScript(FileList, path.join(RootDir, "Build.py"))
 
-MakeAll(6, ["d", "c", "b", "a"])
+#
+# When increasing the maximum angular momentum, Auto2eMaxL,
+# keep in mind that more memory is needed for the temporary
+# storage during integral evaluation. ***As a result, your
+# program might crash because of a too low limit for the
+# stack memory.*** This will result in a segmentation fault.
+# Increase the limit for the stack memory for both the main
+# thread and worker threads (OMP threads) to guarantee a
+# proper workspace for the integral subroutines.
+#
+Auto2eMaxL = 5
+MakeAll(Auto2eMaxL, ["d", "c", "b", "a"])
